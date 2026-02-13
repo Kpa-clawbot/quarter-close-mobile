@@ -438,12 +438,16 @@ body {
    Column Headers
    ============================================ */
 #col-headers {
-  display: grid;
-  grid-template-columns: 40px 200px 60px 140px 140px 160px 120px 80px 1fr;
+  display: contents;
+}
+
+#col-headers > * {
   background: #f0f0f0;
   border-bottom: 1px solid #c0c0c0;
   height: 22px;
-  align-items: center;
+  position: sticky;
+  top: 0;
+  z-index: 2;
 }
 
 .row-num-header {
@@ -472,27 +476,38 @@ body {
   overflow-y: auto;
   overflow-x: hidden;
   background: white;
+  display: grid;
+  grid-template-columns: 40px max-content max-content max-content max-content max-content max-content max-content 1fr;
+  align-content: start;
 }
 
 /* Grid Rows */
 .grid-row {
-  display: grid;
-  grid-template-columns: 40px 200px 60px 140px 140px 160px 120px 80px 1fr;
-  border-bottom: 1px solid #e8e8e8;
-  min-height: 28px;
-  align-items: center;
+  display: contents;
 }
 
-.grid-row:hover {
+.grid-row > * {
+  border-bottom: 1px solid #e8e8e8;
+  min-height: 28px;
+}
+
+.grid-row:hover > * {
   background: #f5f9fc;
 }
 
-.header-row {
+/* Wrapper divs inside grid must be transparent to grid layout */
+#revenue-rows,
+#tax-panel,
+#filler-rows {
+  display: contents;
+}
+
+.header-row > * {
   background: #f8f8f8;
   font-weight: 600;
 }
 
-.header-row:hover {
+.header-row:hover > * {
   background: #f0f4f7;
 }
 
@@ -751,8 +766,10 @@ body {
 
 /* Filler rows */
 .filler-row {
-  display: grid;
-  grid-template-columns: 40px 200px 60px 140px 140px 160px 120px 80px 1fr;
+  display: contents;
+}
+
+.filler-row > * {
   border-bottom: 1px solid #f0f0f0;
   min-height: 24px;
 }

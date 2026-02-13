@@ -20,7 +20,7 @@
   <meta name="description" content="An idle tycoon game disguised as a spreadsheet. Look busy. Get rich.">
   <title>Q4 Financials - Operations.xlsx - Quarter Close</title>
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='4' fill='%23217346'/><rect x='4' y='4' width='7' height='5' rx='1' fill='white'/><rect x='13' y='4' width='7' height='5' rx='1' fill='white'/><rect x='22' y='4' width='7' height='5' rx='1' fill='white'/><rect x='4' y='11' width='7' height='5' rx='1' fill='white' opacity='0.8'/><rect x='13' y='11' width='7' height='5' rx='1' fill='white' opacity='0.8'/><rect x='22' y='11' width='7' height='5' rx='1' fill='white' opacity='0.8'/><rect x='4' y='18' width='7' height='5' rx='1' fill='white' opacity='0.6'/><rect x='13' y='18' width='7' height='5' rx='1' fill='white' opacity='0.6'/><rect x='22' y='18' width='7' height='5' rx='1' fill='white' opacity='0.6'/><rect x='4' y='25' width='7' height='5' rx='1' fill='white' opacity='0.4'/><rect x='13' y='25' width='7' height='5' rx='1' fill='white' opacity='0.4'/><rect x='22' y='25' width='7' height='5' rx='1' fill='white' opacity='0.4'/></svg>">
-  <link rel="stylesheet" href="style.css?v=9">
+  <link rel="stylesheet" href="style.css?v=10">
 </head>
 <body>
   <!-- ===== ARC SELECTION ===== -->
@@ -113,25 +113,7 @@
       <div id="formula-input">=SUM(D2:D9)</div>
     </div>
 
-    <!-- Column Headers -->
-    <div id="col-headers">
-      <div class="row-num-header"></div>
-      <div class="col-header">A</div>
-      <div class="col-header">B</div>
-      <div class="col-header">C</div>
-      <div class="col-header">D</div>
-      <div class="col-header">E</div>
-      <div class="col-header">F</div>
-      <div class="col-header col-g">G</div>
-      <div class="col-header col-h">H</div>
-    </div>
-
-    <!-- Time scale change banner -->
-    <div id="timescale-banner" class="hidden">
-      <span id="timescale-text"></span>
-    </div>
-
-    <!-- Mini-task bar (sits between headers and grid) -->
+    <!-- Mini-task bar (sits between formula bar and grid) -->
     <div id="mini-task-bar" class="hidden">
       <span id="mini-task-text"></span>
       <span id="mini-task-reward"></span>
@@ -141,6 +123,18 @@
 
     <!-- Spreadsheet Grid -->
     <div id="grid-container">
+      <!-- Column Headers (inside grid for shared column sizing) -->
+      <div id="col-headers" class="grid-row">
+        <div class="row-num-header"></div>
+        <div class="col-header">A</div>
+        <div class="col-header">B</div>
+        <div class="col-header">C</div>
+        <div class="col-header">D</div>
+        <div class="col-header">E</div>
+        <div class="col-header">F</div>
+        <div class="col-header col-g">G</div>
+        <div class="col-header col-h">H</div>
+      </div>
       <!-- Row 1: Header / Cash -->
       <div class="grid-row header-row" id="row-1">
         <div class="row-num">1</div>
@@ -415,7 +409,7 @@
     </div>
   </div>
 
-  <script src="game.js?v=13"></script>
+  <script src="game.js?v=14"></script>
   <script>
     if (location.hostname === 'kpa-clawbot.github.io') {
       var s = document.createElement('script');
