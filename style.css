@@ -594,6 +594,19 @@ body {
   background: #bbdefb;
 }
 
+.cell-btn.btn-max {
+  background: #e8eaf6;
+  border-color: #9fa8da;
+  color: #283593;
+  font-size: 9px;
+  padding: 1px 4px;
+  margin-left: 2px;
+}
+
+.cell-btn.btn-max:hover {
+  background: #c5cae9;
+}
+
 .cell-btn.btn-upgrade {
   background: #fff3e0;
   border-color: #ffb74d;

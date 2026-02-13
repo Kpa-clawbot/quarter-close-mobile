@@ -250,6 +250,22 @@ function automateCost(source) {
   return Math.floor(Math.max(50, stats.unlockCost) * stats.autoCostMult);
 }
 
+function maxAffordable(source) {
+  let cash = gameState.cash;
+  let emps = source.employees;
+  let count = 0;
+  const stats = SOURCE_STATS[source.id];
+  const base = stats.unlockCost || 10;
+  while (count < 1000) {
+    const cost = Math.max(5, Math.floor(base * 0.5 * Math.pow(1.15, emps)));
+    if (cash < cost) break;
+    cash -= cost;
+    emps++;
+    count++;
+  }
+  return count;
+}
+
 // Revenue per tick (= per day) for a source
 function sourceRevPerTick(source) {
   if (!source.unlocked || source.employees === 0) return 0;
@@ -560,9 +576,11 @@ function updateGridValues() {
     // Rev/yr (column G)
     row.querySelector('[data-field="annual"]').textContent = formatRate(rev);
 
-    // Action 1: Hire
+    // Action 1: Hire + Max
     const a1 = row.querySelector('[data-field="action1"]');
-    a1.innerHTML = `<button class="cell-btn btn-hire" onclick="hireEmployee(${i})" ${gameState.cash >= hCost ? '' : 'disabled'}>Hire ${formatMoney(hCost)}</button>`;
+    const maxHires = maxAffordable(state);
+    a1.innerHTML = `<button class="cell-btn btn-hire" onclick="hireEmployee(${i})" ${gameState.cash >= hCost ? '' : 'disabled'}>Hire ${formatMoney(hCost)}</button>` +
+      (maxHires > 1 ? `<button class="cell-btn btn-max" onclick="hireMax(${i})">Max(${maxHires})</button>` : '');
 
     // Action 2: Upgrade or Automate
     const a2 = row.querySelector('[data-field="action2"]');
@@ -677,6 +695,25 @@ function hireEmployee(index) {
   updateGridValues();
   updateDisplay();
   flashCash();
+}
+
+function hireMax(index) {
+  const state = gameState.sources[index];
+  if (!state.unlocked) return;
+  let hired = 0;
+  while (true) {
+    const cost = hireCost(state);
+    if (gameState.cash < cost) break;
+    gameState.cash -= cost;
+    state.employees++;
+    hired++;
+    if (hired > 1000) break; // safety
+  }
+  if (hired > 0) {
+    updateGridValues();
+    updateDisplay();
+    flashCash();
+  }
 }
 
 function upgradeSource(index) {
