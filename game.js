@@ -858,8 +858,10 @@ function updateGridValues() {
       a2.innerHTML = `<button class="cell-btn btn-automate" onclick="automateSource(${i})" ${gameState.cash >= aCost ? '' : 'disabled'} title="Revenue flows automatically">Auto ${formatMoney(aCost)}</button>`;
     } else {
       const maxUpgrades = maxAffordableUpgrades(state);
+      const revGainPerDay = state.employees * src.baseRate * 0.5 / 365.25;
+      const revGainLabel = revGainPerDay > 0 ? ` (+${formatPerTick(revGainPerDay)}/d)` : '';
       a2.innerHTML = (maxUpgrades > 1 ? `<button class="cell-btn btn-max" onclick="upgradeMax(${i})">Max(${maxUpgrades})</button>` : '') +
-        `<button class="cell-btn btn-upgrade" onclick="upgradeSource(${i})" ${gameState.cash >= uCost ? '' : 'disabled'} title="+50% efficiency per employee">⬆ ${formatMoney(uCost)}</button>`;
+        `<button class="cell-btn btn-upgrade" onclick="upgradeSource(${i})" ${gameState.cash >= uCost ? '' : 'disabled'} title="+50% efficiency per employee — adds ${formatPerTick(revGainPerDay)}/day">⬆ ${formatMoney(uCost)}${revGainLabel}</button>`;
     }
 
     // Action 3: Collect (click) or AUTO badge
