@@ -1171,7 +1171,7 @@ function processQuarterlyTax() {
         updateTaxPanel();
         return `You ignored the ${qLabel} tax bill. ${formatMoney(taxOwed)} added to tax liability. Interest is accruing...`;
       }},
-    ]);
+    ], { expiresMs: 10000 });
 }
 
 function processTaxDebts() {
@@ -1478,8 +1478,8 @@ function triggerIRS() {
   processQuarterlyTax();
 }
 
-function showEventToast(sender, subject, body, actions) {
-  showEvent({ sender, subject, body, actions });
+function showEventToast(sender, subject, body, actions, opts) {
+  showEvent({ sender, subject, body, actions, ...opts });
 }
 
 function gameTick() {
@@ -1568,6 +1568,8 @@ function triggerRandomEvent() {
   showEvent(event);
 }
 
+let eventToastTimer = null;
+
 function showEvent(event) {
   // Handle dynamic events that generate content at trigger time
   if (event.dynamic && event.setup) {
@@ -1575,6 +1577,9 @@ function showEvent(event) {
     if (!result) return; // couldn't generate (e.g., no unlocked sources)
     event = { ...event, body: result.body, actions: result.actions };
   }
+
+  // Clear any existing timer
+  if (eventToastTimer) { clearTimeout(eventToastTimer); eventToastTimer = null; }
 
   const toast = document.getElementById('event-toast');
   document.getElementById('toast-sender').textContent = event.sender;
@@ -1619,6 +1624,7 @@ function showEvent(event) {
       btn.className = 'toast-btn' + (i === 0 ? ' toast-primary' : '');
       btn.textContent = action.label;
       btn.onclick = () => {
+        if (eventToastTimer) { clearTimeout(eventToastTimer); eventToastTimer = null; }
         const result = action.effect(gameState);
         document.getElementById('status-text').textContent = result;
         setTimeout(() => {
@@ -1627,6 +1633,22 @@ function showEvent(event) {
         dismissEvent();
         updateDisplay();
       };
+
+      // Add countdown overlay on the last action if event expires
+      if (event.expiresMs && i === event.actions.length - 1) {
+        btn.style.position = 'relative';
+        btn.style.overflow = 'hidden';
+        const fill = document.createElement('div');
+        fill.className = 'toast-btn-countdown';
+        fill.style.animationDuration = (event.expiresMs / 1000) + 's';
+        btn.appendChild(fill);
+
+        eventToastTimer = setTimeout(() => {
+          eventToastTimer = null;
+          btn.click();
+        }, event.expiresMs);
+      }
+
       actionsDiv.appendChild(btn);
     });
   }
@@ -1635,6 +1657,7 @@ function showEvent(event) {
 }
 
 function dismissEvent() {
+  if (eventToastTimer) { clearTimeout(eventToastTimer); eventToastTimer = null; }
   document.getElementById('event-toast').classList.add('hidden');
 }
 
