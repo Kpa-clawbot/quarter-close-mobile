@@ -1140,12 +1140,12 @@ body {
 #mini-task-bar {
   display: flex;
   align-items: center;
-  justify-content: center;
   gap: 10px;
-  padding: 4px 12px;
+  padding: 4px 12px 4px 36px;
   background: #fffde7;
   border-bottom: 1px solid #f0e68c;
   font-size: 12px;
+  max-width: 600px;
 }
 
 #mini-task-text {
