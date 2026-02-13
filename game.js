@@ -1436,6 +1436,22 @@ function resetGame() {
   gameState.totalClicks = 0;
   gameState.gameStartDate = Date.UTC(2024, 0, 1);
   gameState.gameElapsedSecs = 0;
+  gameState.revPenalty = null;
+  gameState.revBonus = null;
+  gameState.powerOutage = null;
+  gameState.hireFrozen = null;
+  gameState.taxDebts = [];
+  gameState.quarterRevenue = 0;
+  gameState.quarterExpenses = 0;
+  gameState.quarterTaxPaid = 0;
+  gameState.totalTaxPaid = 0;
+  gameState.totalSpentHires = 0;
+  gameState.totalSpentUpgrades = 0;
+  gameState.totalSpentAuto = 0;
+  gameState.lastQuarterDay = 0;
+  gameState.eventCooldown = 0;
+  gameState.miniTaskCooldown = 0;
+  gameState.miniTaskActive = false;
   showArcSelect();
 }
 
