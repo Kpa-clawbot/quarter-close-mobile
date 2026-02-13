@@ -1483,7 +1483,7 @@ function updateTaxPanel() {
         <div class="cell cell-e" style="color:#888;font-size:11px">${d.daysOverdue}d</div>
         <div class="cell cell-f" style="font-size:10px">${stageLabels[d.stage]}</div>
         <div class="cell cell-g" style="font-size:10px;color:#888">${nextText}</div>
-        <div class="cell cell-h"><button class="cell-btn btn-max" onclick="settleTaxDebt(${i})">Settle</button></div>
+        <div class="cell cell-h"><button class="cell-btn btn-max" data-settle="${i}">Settle</button></div>
       </div>`;
     }
 
@@ -1497,19 +1497,12 @@ function updateTaxPanel() {
       <div class="cell cell-d" style="font-family:Consolas,monospace;font-size:12px;color:#c00;font-weight:700;justify-content:flex-end">${formatMoney(total)}</div>
       <div class="cell cell-e"></div><div class="cell cell-f"></div>
       <div class="cell cell-g"></div>
-      <div class="cell cell-h"><button class="cell-btn btn-max" onclick="settleAllTax()" style="${settleAllVis}">Settle All</button></div>
+      <div class="cell cell-h"><button class="cell-btn btn-max" data-settle-all style="${settleAllVis}">Settle All</button></div>
     </div>`;
   }
 
-  // Only update DOM every 3 ticks or when debt count changes
-  // Prevents innerHTML replacement from eating Settle button clicks
-  const debtKey = (gameState.taxDebts || []).map(d => d.current + d.stage).join(',');
-  const updateKey = debtKey + '|' + Math.floor(gameState.totalPlayTime / 3);
-  if (panel.dataset.lastKey !== updateKey) {
-    panel.innerHTML = html;
-    panel.dataset.lastKey = updateKey;
-    buildFillerRows();
-  }
+  panel.innerHTML = html;
+  buildFillerRows();
 }
 
 // Debug: trigger quarterly tax
@@ -2085,6 +2078,23 @@ document.addEventListener('click', (e) => {
 function init() {
   generateBossGrid();
   initChartDrag();
+
+  // Delegated click handler for tax panel buttons (survives innerHTML rebuilds)
+  document.getElementById('tax-panel').addEventListener('click', (e) => {
+    const settleBtn = e.target.closest('[data-settle]');
+    if (settleBtn) {
+      e.stopPropagation();
+      settleTaxDebt(parseInt(settleBtn.dataset.settle));
+      return;
+    }
+    const settleAllBtn = e.target.closest('[data-settle-all]');
+    if (settleAllBtn) {
+      e.stopPropagation();
+      settleAllTax();
+      return;
+    }
+  });
+
   const loaded = loadGame();
   if (!loaded) {
     showArcSelect();
