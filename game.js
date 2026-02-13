@@ -280,6 +280,8 @@ let gameState = {
   miniTaskCooldown: 0,
   miniTaskActive: false,
   miniTaskStreak: 0,
+  goldenCellActive: false,
+  goldenCellCooldown: 60,  // don't spawn for first 60s
   totalClicks: 0,
   gameStartDate: Date.UTC(2024, 0, 1),  // Jan 1, 2024
   gameElapsedSecs: 0,
@@ -461,6 +463,8 @@ function selectArc(arcKey) {
   gameState.miniTaskCooldown = 10;
   gameState.miniTaskActive = false;
   gameState.miniTaskStreak = 0;
+  gameState.goldenCellActive = false;
+  gameState.goldenCellCooldown = 60;
   gameState.gameStartDate = Date.UTC(2024, 0, 1);
   gameState.gameElapsedSecs = 0;
   gameState.revPenalty = null;
@@ -579,6 +583,74 @@ function skipMiniTask() {
 }
 
 // ===== TIME SCALE CHANGE NOTIFICATION =====
+
+// ===== GOLDEN CELL =====
+let goldenCellTimer = null;
+
+function trySpawnGoldenCell() {
+  if (gameState.goldenCellActive) return;
+  if (gameState.goldenCellCooldown > 0) { gameState.goldenCellCooldown--; return; }
+
+  // ~2% chance per tick (avg every 50s)
+  if (Math.random() > 0.02) return;
+
+  const unlocked = gameState.sources.map((s, i) => ({ s, i })).filter(x => x.s.unlocked && x.s.employees > 0);
+  if (unlocked.length === 0) return;
+
+  const pick = unlocked[Math.floor(Math.random() * unlocked.length)];
+  const rowIndex = pick.i;
+
+  // Pick a random visible cell in that row (columns b through h)
+  const cols = ['cell-b', 'cell-c', 'cell-d', 'cell-e', 'cell-f', 'cell-g', 'cell-h'];
+  const colClass = cols[Math.floor(Math.random() * cols.length)];
+
+  // Find the grid row for this source
+  const gridRows = document.querySelectorAll('#grid-container .source-row');
+  if (rowIndex >= gridRows.length) return;
+
+  const row = gridRows[rowIndex];
+  const cell = row.querySelector('.' + colClass);
+  if (!cell) return;
+
+  const reward = Math.floor(totalRevPerTick() * 20);
+  if (reward <= 0) return;
+
+  gameState.goldenCellActive = true;
+  cell.classList.add('golden-cell');
+  cell.dataset.goldenReward = reward;
+
+  // 5 second window
+  goldenCellTimer = setTimeout(() => {
+    cell.classList.remove('golden-cell');
+    delete cell.dataset.goldenReward;
+    gameState.goldenCellActive = false;
+    gameState.goldenCellCooldown = 30 + Math.floor(Math.random() * 30); // 30-60s before next
+  }, 5000);
+}
+
+function clickGoldenCell(cell) {
+  if (!cell.classList.contains('golden-cell')) return false;
+
+  const reward = parseFloat(cell.dataset.goldenReward) || 0;
+  cell.classList.remove('golden-cell');
+  delete cell.dataset.goldenReward;
+  gameState.goldenCellActive = false;
+  if (goldenCellTimer) { clearTimeout(goldenCellTimer); goldenCellTimer = null; }
+  gameState.goldenCellCooldown = 30 + Math.floor(Math.random() * 30);
+
+  gameState.cash += reward;
+  gameState.totalEarned += reward;
+  gameState.quarterRevenue += reward;
+  gameState.totalClicks++;
+
+  document.getElementById('status-text').textContent = `✨ Golden cell! +${formatMoney(reward)}`;
+  setTimeout(() => { document.getElementById('status-text').textContent = 'Ready'; }, 2000);
+
+  flashCash();
+  updateDisplay();
+  return true;
+}
+
 // ===== RENDERING =====
 function buildGrid() {
   if (!gameState.arc) return;
@@ -591,7 +663,7 @@ function buildGrid() {
     const rowNum = i + 4;
 
     const row = document.createElement('div');
-    row.className = 'grid-row';
+    row.className = 'grid-row source-row';
     row.id = `source-row-${i}`;
 
     if (!state.unlocked) {
@@ -1408,6 +1480,7 @@ function gameTick() {
 
   // Mini-task system
   trySpawnMiniTask();
+  trySpawnGoldenCell();
 
   // Event system
   if (gameState.eventCooldown > 0) {
@@ -1686,6 +1759,8 @@ function resetGame() {
   gameState.miniTaskCooldown = 0;
   gameState.miniTaskActive = false;
   gameState.miniTaskStreak = 0;
+  gameState.goldenCellActive = false;
+  gameState.goldenCellCooldown = 60;
   showArcSelect();
 }
 
@@ -1831,6 +1906,10 @@ function dismissConfirm() {
 
 // Close file menu when clicking anywhere else
 document.addEventListener('click', (e) => {
+  // Golden cell click
+  const goldenEl = e.target.closest('.golden-cell');
+  if (goldenEl && clickGoldenCell(goldenEl)) return;
+
   if (fileMenuOpen && !e.target.closest('#file-menu')) {
     closeFileMenu();
   }
