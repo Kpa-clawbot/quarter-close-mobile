@@ -532,10 +532,20 @@ function buildGrid() {
   }
 
   // Filler rows
+  buildFillerRows();
+
+  gridBuilt = true;
+  updateGridValues();
+}
+
+function buildFillerRows() {
   const filler = document.getElementById('filler-rows');
   filler.innerHTML = '';
-  const startRow = SOURCE_STATS.length + 4;
-  for (let i = 0; i < 20; i++) {
+  const taxRowCount = gameState.taxDebts && gameState.taxDebts.length > 0 ? gameState.taxDebts.length + 3 : 0;
+  const totalFillerTarget = 20;
+  const fillerCount = Math.max(2, totalFillerTarget - taxRowCount);
+  const startRow = SOURCE_STATS.length + 4 + taxRowCount;
+  for (let i = 0; i < fillerCount; i++) {
     const row = document.createElement('div');
     row.className = 'filler-row';
     row.innerHTML = `
@@ -546,9 +556,6 @@ function buildGrid() {
     `;
     filler.appendChild(row);
   }
-
-  gridBuilt = true;
-  updateGridValues();
 }
 
 function updateGridValues() {
@@ -909,10 +916,9 @@ function updateTaxPanel() {
     seizure: '🚨 Seizure',
   };
 
-  // Figure out row numbering (continue from filler rows)
-  const fillerCount = document.querySelectorAll('.filler-row').length;
+  // Row numbering continues after source rows
   const sourceCount = SOURCE_STATS.length;
-  let rowNum = sourceCount + 4 + fillerCount;
+  let rowNum = sourceCount + 4;
 
   let html = '';
 
@@ -979,6 +985,9 @@ function updateTaxPanel() {
   </div>`;
 
   panel.innerHTML = html;
+
+  // Rebuild filler rows to keep total row count consistent
+  buildFillerRows();
 }
 
 // Debug: trigger IRS event
