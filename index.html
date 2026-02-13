@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Q4 Financials - Operations.xlsx - Excel Online</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='4' fill='%23217346'/><text x='16' y='23' text-anchor='middle' fill='white' font-size='20' font-family='Arial' font-weight='bold'>X</text></svg>">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- ===== GAME VIEW ===== -->
+  <div id="game-view">
+    <!-- Title Bar -->
+    <div id="title-bar">
+      <div id="title-left">
+        <span id="title-icon">
+          <svg width="16" height="16" viewBox="0 0 32 32"><rect width="32" height="32" rx="4" fill="#217346"/><text x="16" y="23" text-anchor="middle" fill="white" font-size="20" font-family="Arial" font-weight="bold">X</text></svg>
+        </span>
+        <span id="title-text">Q4 Financials - Operations.xlsx</span>
+      </div>
+      <div id="title-right">
+        <span class="title-btn">─</span>
+        <span class="title-btn">□</span>
+        <span class="title-btn title-close">✕</span>
+      </div>
+    </div>
+
+    <!-- Ribbon / Menu Bar -->
+    <div id="menu-bar">
+      <span class="menu-item">File</span>
+      <span class="menu-item">Home</span>
+      <span class="menu-item">Insert</span>
+      <span class="menu-item">Page Layout</span>
+      <span class="menu-item">Formulas</span>
+      <span class="menu-item">Data</span>
+      <span class="menu-item">Review</span>
+      <span class="menu-item">View</span>
+      <span class="menu-item">Help</span>
+    </div>
+
+    <!-- Toolbar -->
+    <div id="toolbar">
+      <div class="toolbar-group">
+        <button class="tool-btn" title="Undo">↶</button>
+        <button class="tool-btn" title="Redo">↷</button>
+        <div class="toolbar-sep"></div>
+        <select class="tool-select font-select">
+          <option>Calibri</option>
+          <option>Arial</option>
+          <option>Times New Roman</option>
+        </select>
+        <select class="tool-select size-select">
+          <option>11</option>
+          <option>12</option>
+          <option>14</option>
+        </select>
+        <div class="toolbar-sep"></div>
+        <button class="tool-btn" title="Bold"><b>B</b></button>
+        <button class="tool-btn" title="Italic"><i>I</i></button>
+        <button class="tool-btn" title="Underline"><u>U</u></button>
+        <div class="toolbar-sep"></div>
+        <button class="tool-btn" title="Align Left">≡</button>
+        <button class="tool-btn" title="Align Center">≡</button>
+        <button class="tool-btn" title="Align Right">≡</button>
+        <div class="toolbar-sep"></div>
+        <button class="tool-btn" title="Currency">$</button>
+        <button class="tool-btn" title="Percent">%</button>
+        <button class="tool-btn" title="Comma">,</button>
+      </div>
+    </div>
+
+    <!-- Formula Bar -->
+    <div id="formula-bar">
+      <div id="cell-ref">D1</div>
+      <div id="fx-label">fx</div>
+      <div id="formula-input">=SUM(D2:D9)</div>
+    </div>
+
+    <!-- Column Headers -->
+    <div id="col-headers">
+      <div class="row-num-header"></div>
+      <div class="col-header">A</div>
+      <div class="col-header">B</div>
+      <div class="col-header">C</div>
+      <div class="col-header">D</div>
+      <div class="col-header">E</div>
+      <div class="col-header">F</div>
+      <div class="col-header col-g">G</div>
+      <div class="col-header col-h">H</div>
+    </div>
+
+    <!-- Spreadsheet Grid -->
+    <div id="grid-container">
+      <!-- Row 1: Header / Cash -->
+      <div class="grid-row header-row" id="row-1">
+        <div class="row-num">1</div>
+        <div class="cell cell-a header-cell">DEPARTMENT</div>
+        <div class="cell cell-b header-cell">Staff</div>
+        <div class="cell cell-c header-cell">Rev/s</div>
+        <div class="cell cell-d header-cell"></div>
+        <div class="cell cell-e header-cell"></div>
+        <div class="cell cell-f header-cell"></div>
+        <div class="cell cell-g empty-cell"></div>
+        <div class="cell cell-h empty-cell"></div>
+      </div>
+
+      <!-- Row 2: Cash display -->
+      <div class="grid-row" id="row-cash">
+        <div class="row-num">2</div>
+        <div class="cell cell-a cash-label">Total Cash</div>
+        <div class="cell cell-b"></div>
+        <div class="cell cell-c"></div>
+        <div class="cell cell-d cash-value" id="cash-display">$50.00</div>
+        <div class="cell cell-e"></div>
+        <div class="cell cell-f rev-label">Total Rev/s:</div>
+        <div class="cell cell-g rev-value" id="total-rev">$0.00</div>
+        <div class="cell cell-h empty-cell"></div>
+      </div>
+
+      <!-- Separator row -->
+      <div class="grid-row" id="row-sep">
+        <div class="row-num">3</div>
+        <div class="cell cell-a sep-cell"></div>
+        <div class="cell cell-b sep-cell"></div>
+        <div class="cell cell-c sep-cell"></div>
+        <div class="cell cell-d sep-cell"></div>
+        <div class="cell cell-e sep-cell"></div>
+        <div class="cell cell-f sep-cell"></div>
+        <div class="cell cell-g sep-cell"></div>
+        <div class="cell cell-h sep-cell"></div>
+      </div>
+
+      <!-- Revenue source rows (dynamically populated) -->
+      <div id="revenue-rows"></div>
+
+      <!-- Empty filler rows to look like real spreadsheet -->
+      <div id="filler-rows"></div>
+    </div>
+
+    <!-- Sheet Tabs -->
+    <div id="sheet-tabs">
+      <div class="sheet-tab active">Operations</div>
+      <div class="sheet-tab disabled" title="Unlocks at Series A">Sales</div>
+      <div class="sheet-tab disabled" title="Unlocks at Series A">R&D</div>
+      <div class="sheet-tab add-tab">+</div>
+      <div id="tab-spacer"></div>
+    </div>
+
+    <!-- Status Bar -->
+    <div id="status-bar">
+      <div id="status-left">
+        <span id="status-text">Ready</span>
+      </div>
+      <div id="status-center">
+        <span id="status-save" class="status-indicator">💾 Saved</span>
+      </div>
+      <div id="status-right">
+        <span id="status-rev">Revenue: $0/s</span>
+        <span class="status-sep">|</span>
+        <span id="status-zoom">100%</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== BOSS VIEW (Esc toggle) ===== -->
+  <div id="boss-view" class="hidden">
+    <div id="boss-title-bar">
+      <div id="boss-title-left">
+        <span id="boss-title-icon">
+          <svg width="16" height="16" viewBox="0 0 32 32"><rect width="32" height="32" rx="4" fill="#217346"/><text x="16" y="23" text-anchor="middle" fill="white" font-size="20" font-family="Arial" font-weight="bold">X</text></svg>
+        </span>
+        <span>Book1 - Excel</span>
+      </div>
+      <div id="boss-title-right">
+        <span class="title-btn">─</span>
+        <span class="title-btn">□</span>
+        <span class="title-btn title-close">✕</span>
+      </div>
+    </div>
+    <div id="boss-menu-bar">
+      <span class="menu-item">File</span>
+      <span class="menu-item">Home</span>
+      <span class="menu-item">Insert</span>
+      <span class="menu-item">Page Layout</span>
+      <span class="menu-item">Formulas</span>
+      <span class="menu-item">Data</span>
+      <span class="menu-item">Review</span>
+      <span class="menu-item">View</span>
+      <span class="menu-item">Help</span>
+    </div>
+    <div id="boss-formula-bar">
+      <div class="boss-cell-ref">A1</div>
+      <div class="boss-fx">fx</div>
+      <div class="boss-formula-input"></div>
+    </div>
+    <div id="boss-grid"></div>
+    <div id="boss-sheet-tabs">
+      <div class="sheet-tab active">Sheet1</div>
+      <div class="sheet-tab">Sheet2</div>
+      <div class="sheet-tab">Sheet3</div>
+      <div class="sheet-tab add-tab">+</div>
+    </div>
+    <div id="boss-status-bar">
+      <span>Ready</span>
+      <span style="margin-left:auto">100%</span>
+    </div>
+  </div>
+
+  <!-- ===== EVENT TOAST ===== -->
+  <div id="event-toast" class="hidden">
+    <div id="toast-header">
+      <div id="toast-icon">✉️</div>
+      <div id="toast-title">Outlook</div>
+      <div id="toast-close" onclick="dismissEvent()">✕</div>
+    </div>
+    <div id="toast-sender"></div>
+    <div id="toast-body"></div>
+    <div id="toast-actions"></div>
+  </div>
+
+  <!-- ===== OFFLINE MODAL ===== -->
+  <div id="offline-modal" class="hidden">
+    <div id="offline-content">
+      <div id="offline-header">📊 Welcome back!</div>
+      <div id="offline-body"></div>
+      <button id="offline-ok" onclick="dismissOffline()">OK</button>
+    </div>
+  </div>
+
+  <!-- ===== SERIES A MODAL ===== -->
+  <div id="series-a-modal" class="hidden">
+    <div id="series-a-content">
+      <div id="series-a-header">📧 New Email: Series A Offer</div>
+      <div id="series-a-body">
+        <p><strong>From:</strong> Jennifer Walsh &lt;jwals@sequoiacap.com&gt;</p>
+        <p><strong>Subject:</strong> Congratulations — Let's talk Series A</p>
+        <hr>
+        <p>Hi,</p>
+        <p>We've been tracking your growth and are impressed. $1M in revenue from a lemonade stand? That's the kind of scrappy execution we love.</p>
+        <p>We'd like to discuss a <strong>$5M Series A</strong> investment. Our team believes your operations model is highly scalable.</p>
+        <p>Are you available for a call next week?</p>
+        <p><em>— Jennifer Walsh, Partner<br>Sequoia Capital</em></p>
+        <hr>
+        <p class="series-a-teaser">🚀 <strong>Phase 2: Growth</strong> — Coming Soon</p>
+        <p class="series-a-sub">New departments, board of directors, and VC funding rounds await...</p>
+      </div>
+      <button id="series-a-ok" onclick="dismissSeriesA()">Continue Building</button>
+    </div>
+  </div>
+
+  <script src="game.js"></script>
+</body>
+</html>
