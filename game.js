@@ -1197,7 +1197,7 @@ function processQuarterlyTax() {
         updateTaxPanel();
         return `You ignored the ${qLabel} tax bill. ${formatMoney(taxOwed)} added to tax liability. Interest is accruing...`;
       }},
-    ]);
+    ], { expiresMs: 0 });
 }
 
 function processTaxDebts() {
@@ -1240,12 +1240,14 @@ function processTaxDebts() {
       showEventToast('IRS', '2nd Notice — Unpaid Tax Assessment',
         `This is your second notice. Original: ${formatMoney(debt.original)}, now owed: ${formatMoney(debt.current)}. Continued non-payment will result in revenue garnishment.`,
         [{ label: 'Pay now', effect: (gs) => { settleTaxDebt(gameState.taxDebts.indexOf(debt)); return 'Debt settled.'; }},
-         { label: 'Ignore', effect: () => 'The IRS does not forget.' }]);
+         { label: 'Ignore', effect: () => 'The IRS does not forget.' }],
+        { expiresMs: 0 });
     } else if (debt.stage === 'garnish' && oldStage === 'notice2') {
       showEventToast('IRS', '⚠ Revenue Garnishment Order',
         `The IRS is now garnishing 15% of your revenue until tax debt of ${formatMoney(debt.current)} is paid. Settle immediately to restore full income.`,
         [{ label: 'Pay now', effect: (gs) => { settleTaxDebt(gameState.taxDebts.indexOf(debt)); return 'Debt settled. Garnishment lifted.'; }},
-         { label: 'Ignore', effect: () => 'Asset seizure in 90 days.' }]);
+         { label: 'Ignore', effect: () => 'Asset seizure in 90 days.' }],
+        { expiresMs: 0 });
     }
   }
 
