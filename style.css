@@ -1387,17 +1387,39 @@ body {
   to { width: 100%; }
 }
 
-/* Valuation chart (floating Excel chart object, right side) */
+/* Valuation chart (floating Excel chart object) */
 #valuation-chart-container {
-  position: fixed;
-  right: 20px;
-  top: 100px;
-  padding: 8px 12px;
+  position: absolute;
+  padding: 6px 10px;
   background: #fff;
   border: 1px solid #b0b0b0;
   border-radius: 2px;
   box-shadow: 1px 1px 3px rgba(0,0,0,0.08);
   z-index: 10;
+  cursor: move;
+  user-select: none;
+  min-width: 200px;
+  min-height: 140px;
+}
+
+#valuation-chart-container .chart-resize-handle {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  width: 12px;
+  height: 12px;
+  cursor: nwse-resize;
+  background: linear-gradient(135deg, transparent 50%, #b0b0b0 50%, #b0b0b0 60%, transparent 60%, transparent 75%, #b0b0b0 75%, #b0b0b0 85%, transparent 85%);
+}
+
+#valuation-chart-container:hover {
+  border-color: #4472C4;
+}
+
+#valuation-chart {
+  display: block;
+  width: 100%;
+  height: calc(100% - 18px);
 }
 
 .chart-title {

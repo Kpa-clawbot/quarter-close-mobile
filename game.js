@@ -504,6 +504,7 @@ function selectArc(arcKey) {
   taxPanel.innerHTML = '';
   taxPanel.classList.add('hidden');
   document.getElementById('valuation-chart-container').classList.add('hidden');
+  chartPositioned = false;
 
   document.getElementById('arc-select').classList.add('hidden');
   document.getElementById('game-view').classList.remove('hidden');
@@ -2067,6 +2068,7 @@ document.addEventListener('click', (e) => {
 // ===== INITIALIZATION =====
 function init() {
   generateBossGrid();
+  initChartDrag();
   const loaded = loadGame();
   if (!loaded) {
     showArcSelect();
@@ -2078,6 +2080,67 @@ function init() {
 // ===== VALUATION CHART =====
 const MAX_VALUATION_POINTS = 200;
 let valuationTickCounter = 0;
+let chartPositioned = false;
+let chartDragState = null;
+
+function initChartDrag() {
+  const container = document.getElementById('valuation-chart-container');
+  const handle = container.querySelector('.chart-resize-handle');
+
+  // Drag (move) — on the container itself
+  container.addEventListener('mousedown', (e) => {
+    if (e.target === handle) return; // let resize handle its own
+    e.preventDefault();
+    const rect = container.getBoundingClientRect();
+    chartDragState = { type: 'move', startX: e.clientX, startY: e.clientY, origLeft: rect.left, origTop: rect.top };
+  });
+
+  // Resize — on the handle
+  handle.addEventListener('mousedown', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    chartDragState = { type: 'resize', startX: e.clientX, startY: e.clientY, origW: container.offsetWidth, origH: container.offsetHeight };
+  });
+
+  document.addEventListener('mousemove', (e) => {
+    if (!chartDragState) return;
+    if (chartDragState.type === 'move') {
+      const dx = e.clientX - chartDragState.startX;
+      const dy = e.clientY - chartDragState.startY;
+      container.style.left = (chartDragState.origLeft + dx) + 'px';
+      container.style.top = (chartDragState.origTop + dy) + 'px';
+      container.style.right = 'auto';
+    } else if (chartDragState.type === 'resize') {
+      const dx = e.clientX - chartDragState.startX;
+      const dy = e.clientY - chartDragState.startY;
+      const newW = Math.max(200, chartDragState.origW + dx);
+      const newH = Math.max(140, chartDragState.origH + dy);
+      container.style.width = newW + 'px';
+      container.style.height = newH + 'px';
+      // Re-render chart at new size
+      drawValuationChart();
+    }
+  });
+
+  document.addEventListener('mouseup', () => {
+    chartDragState = null;
+  });
+}
+
+function positionChartDefault() {
+  const container = document.getElementById('valuation-chart-container');
+  // Position next to column H of the header row
+  const headerRow = document.getElementById('row-1');
+  if (!headerRow) return;
+  const lastCell = headerRow.querySelector('.cell-h');
+  if (!lastCell) return;
+  const cellRect = lastCell.getBoundingClientRect();
+  container.style.left = (cellRect.right + 8) + 'px';
+  container.style.top = cellRect.top + 'px';
+  container.style.width = '300px';
+  container.style.height = '200px';
+  chartPositioned = true;
+}
 
 function getCompanyValuation() {
   // Valuation = cash + annual revenue × revenue multiple
@@ -2112,10 +2175,17 @@ function drawValuationChart() {
   }
   container.classList.remove('hidden');
 
+  if (!chartPositioned) positionChartDefault();
+
   const canvas = document.getElementById('valuation-chart');
   const ctx = canvas.getContext('2d');
-  const W = canvas.width;
-  const H = canvas.height;
+
+  // Size canvas to container (minus title + padding)
+  const cRect = container.getBoundingClientRect();
+  const W = Math.max(100, Math.floor(cRect.width - 20));
+  const H = Math.max(60, Math.floor(cRect.height - 36));
+  canvas.width = W;
+  canvas.height = H;
 
   ctx.clearRect(0, 0, W, H);
 
