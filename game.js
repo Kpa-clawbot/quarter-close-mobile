@@ -286,8 +286,6 @@ function totalRevPerTick() {
   }
   if (gameState.powerOutage && Date.now() < gameState.powerOutage.until) {
     total = 0;
-  } else {
-    gameState.powerOutage = null;
   }
   return total;
 }
