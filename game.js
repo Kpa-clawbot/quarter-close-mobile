@@ -87,16 +87,33 @@ const SECS_PER_YEAR = 365.25 * SECS_PER_DAY;
 const TIME_LABEL = '▶ 1 day/tick';
 
 // ===== MINI-TASK DEFINITIONS =====
-// Rewards scale: multiplier × current per-tick revenue (min $1)
+// tier: 'low' (clerical), 'mid' (management), 'high' (executive)
+// rewardMult: multiplier × daily revenue
+// minTier: minimum unlocked source tier to see this task
 const MINI_TASKS = [
-  { text: 'Approve Invoice #{{num}}?', rewardMult: [3, 6], type: 'approve' },
-  { text: 'Sign contract for Client #{{num}}', rewardMult: [5, 10], type: 'approve' },
-  { text: 'Review expense report (${{num}})', rewardMult: [3, 5], type: 'approve' },
-  { text: 'Authorize PO #{{num}}', rewardMult: [4, 8], type: 'approve' },
-  { text: 'Confirm delivery #{{num}}', rewardMult: [2, 5], type: 'approve' },
-  { text: 'Reply to vendor inquiry', rewardMult: [2, 4], type: 'approve' },
-  { text: 'Process refund #{{num}}', rewardMult: [3, 6], type: 'approve' },
-  { text: 'Approve time sheet for Week {{num}}', rewardMult: [2, 5], type: 'approve' },
+  // Low tier — clerical busywork
+  { text: 'Approve Invoice #{{num}}?', rewardMult: [0.5, 1], tier: 'low', minTier: 0, type: 'approve' },
+  { text: 'Confirm delivery #{{num}}', rewardMult: [0.3, 0.8], tier: 'low', minTier: 0, type: 'approve' },
+  { text: 'Reply to vendor inquiry', rewardMult: [0.3, 0.6], tier: 'low', minTier: 0, type: 'approve' },
+  { text: 'Approve time sheet for Week {{num}}', rewardMult: [0.2, 0.5], tier: 'low', minTier: 0, type: 'approve' },
+  { text: 'Process refund #{{num}}', rewardMult: [0.4, 0.8], tier: 'low', minTier: 0, type: 'approve' },
+  { text: 'Review expense report (${{num}})', rewardMult: [0.3, 0.7], tier: 'low', minTier: 0, type: 'approve' },
+
+  // Mid tier — management decisions
+  { text: 'Sign contract for Client #{{num}}', rewardMult: [2, 5], tier: 'mid', minTier: 2, type: 'approve' },
+  { text: 'Authorize PO #{{num}}', rewardMult: [1.5, 3], tier: 'mid', minTier: 2, type: 'approve' },
+  { text: 'Approve Q{{num}} marketing budget', rewardMult: [2, 4], tier: 'mid', minTier: 3, type: 'approve' },
+  { text: 'Sign off on new hire #{{num}}', rewardMult: [1.5, 3], tier: 'mid', minTier: 3, type: 'approve' },
+  { text: 'Negotiate vendor discount', rewardMult: [2, 5], tier: 'mid', minTier: 2, type: 'approve' },
+  { text: 'Approve product launch timeline', rewardMult: [3, 6], tier: 'mid', minTier: 3, type: 'approve' },
+
+  // High tier — executive/deal-level
+  { text: 'Close Series {{num}} funding round', rewardMult: [8, 15], tier: 'high', minTier: 5, type: 'approve' },
+  { text: 'Sign M&A term sheet — Acq #{{num}}', rewardMult: [10, 20], tier: 'high', minTier: 6, type: 'approve' },
+  { text: 'Approve Board Resolution #{{num}}', rewardMult: [5, 10], tier: 'high', minTier: 5, type: 'approve' },
+  { text: 'Finalize enterprise deal (${{num}}M)', rewardMult: [8, 15], tier: 'high', minTier: 5, type: 'approve' },
+  { text: 'Sign IP licensing agreement #{{num}}', rewardMult: [6, 12], tier: 'high', minTier: 4, type: 'approve' },
+  { text: 'Authorize stock buyback program', rewardMult: [10, 20], tier: 'high', minTier: 6, type: 'approve' },
 ];
 
 function miniTaskReward(task) {
@@ -388,18 +405,22 @@ function trySpawnMiniTask() {
   const spawnChance = passiveIncome > 500 ? 0.02 : passiveIncome > 50 ? 0.04 : 0.06;
   if (Math.random() > spawnChance) return;
 
-  const task = MINI_TASKS[Math.floor(Math.random() * MINI_TASKS.length)];
-  const num = Math.floor(Math.random() * 9000) + 1000;
+  // Filter tasks by highest unlocked tier
+  const maxTier = gameState.sources.reduce((max, s) => s.unlocked ? Math.max(max, s.id) : max, 0);
+  const eligible = MINI_TASKS.filter(t => t.minTier <= maxTier);
+  const task = eligible[Math.floor(Math.random() * eligible.length)];
+  const num = task.tier === 'high' ? (Math.floor(Math.random() * 9) + 1) : Math.floor(Math.random() * 9000) + 1000;
   const reward = miniTaskReward(task);
   const text = task.text.replace('{{num}}', num);
 
-  showMiniTask(text, reward);
+  showMiniTask(text, reward, task.tier);
 }
 
-function showMiniTask(text, reward) {
+function showMiniTask(text, reward, tier) {
   gameState.miniTaskActive = true;
   const bar = document.getElementById('mini-task-bar');
-  document.getElementById('mini-task-text').textContent = text;
+  const tierLabels = { low: '📋', mid: '📊', high: '💼' };
+  document.getElementById('mini-task-text').textContent = (tierLabels[tier] || '') + ' ' + text;
   document.getElementById('mini-task-reward').textContent = `+${formatMoney(reward)}`;
   bar.dataset.reward = reward;
   bar.classList.remove('hidden');
