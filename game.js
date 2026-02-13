@@ -157,31 +157,6 @@ const EVENTS = [
     ]
   },
   {
-    sender: 'IRS',
-    subject: 'Tax Assessment Notice',
-    body: 'Your quarterly tax assessment is due. Please remit 10% of current cash balance.',
-    actions: [
-      { label: 'Pay taxes (-10% cash)', effect: (gs) => {
-        const tax = Math.floor(gs.cash * 0.1);
-        gs.cash -= tax;
-        return `Paid ${formatMoney(tax)} in taxes. Uncle Sam thanks you.`;
-      }},
-      { label: 'Ignore', effect: (gs) => {
-        const amount = Math.floor(gs.cash * 0.1);
-        if (!gs.taxDebts) gs.taxDebts = [];
-        gs.taxDebts.push({
-          original: amount,
-          current: amount,
-          dayCreated: Math.floor(gs.gameElapsedSecs / 86400),
-          daysOverdue: 0,
-          stage: 'notice1', // notice1 → notice2 → garnish → seizure
-        });
-        updateTaxPanel();
-        return `You ignored the IRS. ${formatMoney(amount)} added to tax liability. Interest is accruing...`;
-      }},
-    ]
-  },
-  {
     sender: 'College Buddy',
     subject: 'Hey can I get a discount??',
     body: 'Bro remember me from college?? Hook me up with a discount! For old times\' sake 🤙',
@@ -230,6 +205,15 @@ let gameState = {
   totalClicks: 0,
   gameStartDate: Date.UTC(2024, 0, 1),  // Jan 1, 2024
   gameElapsedSecs: 0,
+  // Financials
+  quarterRevenue: 0,      // revenue earned this quarter
+  quarterExpenses: 0,     // expenses this quarter
+  quarterTaxPaid: 0,      // taxes paid this quarter
+  totalTaxPaid: 0,        // lifetime taxes paid
+  totalSpentHires: 0,
+  totalSpentUpgrades: 0,
+  totalSpentAuto: 0,
+  lastQuarterDay: 0,      // game-day of last quarter close
 };
 
 let gridBuilt = false;
@@ -462,6 +446,7 @@ function completeMiniTask() {
   const reward = parseFloat(bar.dataset.reward) || 0;
   gameState.cash += reward;
   gameState.totalEarned += reward;
+  gameState.quarterRevenue += reward;
   gameState.totalClicks++;
   bar.classList.add('hidden');
   gameState.miniTaskActive = false;
@@ -715,6 +700,9 @@ function updateDisplay() {
     if (gameState.hireFrozen) gameState.hireFrozen = null;
   }
   // Don't overwrite mini-task feedback messages
+
+  // Update P&L section
+  updateTaxPanel();
 }
 
 // ===== GAME ACTIONS =====
@@ -725,6 +713,7 @@ function unlockSource(index) {
   if (!isNextUnlock(index)) return;
 
   gameState.cash -= src.unlockCost;
+  gameState.quarterExpenses += src.unlockCost;
   state.unlocked = true;
   state.employees = 1;
   buildGrid();
@@ -741,6 +730,8 @@ function hireEmployee(index) {
 
   gameState.cash -= cost;
   state.employees++;
+  gameState.quarterExpenses += cost;
+  gameState.totalSpentHires += cost;
   updateGridValues();
   updateDisplay();
   flashCash();
@@ -751,15 +742,19 @@ function hireMax(index) {
   if (!state.unlocked) return;
   if (gameState.hireFrozen && Date.now() < gameState.hireFrozen) return;
   let hired = 0;
+  let totalCost = 0;
   while (true) {
     const cost = hireCost(state);
     if (gameState.cash < cost) break;
     gameState.cash -= cost;
     state.employees++;
+    totalCost += cost;
     hired++;
     if (hired > 1000) break; // safety
   }
   if (hired > 0) {
+    gameState.quarterExpenses += totalCost;
+    gameState.totalSpentHires += totalCost;
     updateGridValues();
     updateDisplay();
     flashCash();
@@ -774,6 +769,8 @@ function upgradeSource(index) {
 
   gameState.cash -= cost;
   state.upgradeLevel++;
+  gameState.quarterExpenses += cost;
+  gameState.totalSpentUpgrades += cost;
   updateGridValues();
   updateDisplay();
   flashCash();
@@ -787,8 +784,11 @@ function automateSource(index) {
 
   gameState.cash -= cost;
   state.automated = true;
+  gameState.quarterExpenses += cost;
+  gameState.totalSpentAuto += cost;
   gameState.cash += state.pendingCollect;
   gameState.totalEarned += state.pendingCollect;
+  gameState.quarterRevenue += state.pendingCollect;
   state.pendingCollect = 0;
   updateGridValues();
   updateDisplay();
@@ -804,6 +804,7 @@ function collectSource(index) {
   const clickEarnings = src.clickValue + state.pendingCollect;
   gameState.cash += clickEarnings;
   gameState.totalEarned += clickEarnings;
+  gameState.quarterRevenue += clickEarnings;
   gameState.totalClicks++;
   state.pendingCollect = 0;
 
@@ -827,6 +828,53 @@ function flashCash() {
 
 // ===== GAME LOOP (1 second ticks) =====
 // ===== TAX DEBT SYSTEM =====
+
+function processQuarterlyTax() {
+  const taxableIncome = gameState.quarterRevenue - gameState.quarterExpenses;
+  const taxRate = 0.25; // 25% corporate tax
+  const taxOwed = Math.max(0, Math.floor(taxableIncome * taxRate));
+
+  // Reset quarterly tracking
+  const qRev = gameState.quarterRevenue;
+  const qExp = gameState.quarterExpenses;
+  gameState.quarterRevenue = 0;
+  gameState.quarterExpenses = 0;
+  gameState.quarterTaxPaid = 0;
+
+  if (taxOwed <= 0) return; // no profit, no tax
+
+  const currentDay = Math.floor(gameState.gameElapsedSecs / SECS_PER_DAY);
+  const quarter = Math.floor(currentDay / 90);
+  const qLabel = `Q${(quarter % 4) + 1}`;
+
+  showEventToast('IRS', `${qLabel} Quarterly Tax Assessment`,
+    `Quarterly revenue: ${formatMoney(qRev)}\nExpenses: ${formatMoney(qExp)}\nTaxable income: ${formatMoney(taxableIncome)}\n\nTax owed (25%): ${formatMoney(taxOwed)}`,
+    [
+      { label: `Pay ${formatMoney(taxOwed)}`, effect: (gs) => {
+        if (gs.cash < taxOwed) {
+          return `❌ Insufficient funds. Need ${formatMoney(taxOwed)}, have ${formatMoney(gs.cash)}. Debt created.`;
+        }
+        gs.cash -= taxOwed;
+        gs.quarterTaxPaid += taxOwed;
+        gs.totalTaxPaid += taxOwed;
+        return `Paid ${formatMoney(taxOwed)} in ${qLabel} taxes. Good standing with the IRS.`;
+      }},
+      { label: 'Ignore', effect: (gs) => {
+        if (!gs.taxDebts) gs.taxDebts = [];
+        gs.taxDebts.push({
+          original: taxOwed,
+          current: taxOwed,
+          dayCreated: currentDay,
+          daysOverdue: 0,
+          stage: 'notice1',
+          quarter: qLabel,
+        });
+        updateTaxPanel();
+        return `You ignored the ${qLabel} tax bill. ${formatMoney(taxOwed)} added to tax liability. Interest is accruing...`;
+      }},
+    ]);
+}
+
 function processTaxDebts() {
   if (!gameState.taxDebts || gameState.taxDebts.length === 0) return;
 
@@ -915,26 +963,22 @@ function totalTaxOwed() {
 
 function updateTaxPanel() {
   const panel = document.getElementById('tax-panel');
-  if (!gameState.taxDebts || gameState.taxDebts.length === 0) {
+  const hasTaxDebts = gameState.taxDebts && gameState.taxDebts.length > 0;
+  const hasActivity = gameState.totalEarned > 0;
+
+  if (!hasActivity && !hasTaxDebts) {
     panel.classList.add('hidden');
     panel.innerHTML = '';
+    buildFillerRows();
     return;
   }
   panel.classList.remove('hidden');
 
-  const stageLabels = {
-    notice1: '1st Notice',
-    notice2: '⚠ 2nd Notice',
-    garnish: '🔴 Garnishment',
-    seizure: '🚨 Seizure',
-  };
-
-  // Row numbering continues after source rows
   const sourceCount = SOURCE_STATS.length;
   let rowNum = sourceCount + 4;
-
   let html = '';
 
+  // ===== P&L SECTION =====
   // Separator
   html += `<div class="grid-row sep-row">
     <div class="row-num">${rowNum++}</div>
@@ -944,69 +988,149 @@ function updateTaxPanel() {
     <div class="cell cell-g sep-cell"></div><div class="cell cell-h sep-cell"></div>
   </div>`;
 
-  // Header row
-  html += `<div class="grid-row tax-grid-header">
+  const currentDay = Math.floor(gameState.gameElapsedSecs / SECS_PER_DAY);
+  const daysIntoQuarter = currentDay - gameState.lastQuarterDay;
+  const daysToTax = Math.max(0, 90 - daysIntoQuarter);
+
+  // P&L Header
+  html += `<div class="grid-row pnl-header">
     <div class="row-num">${rowNum++}</div>
-    <div class="cell cell-a" style="font-weight:600;color:#900">TAX LIABILITY</div>
-    <div class="cell cell-b" style="font-weight:600;color:#666;font-size:10px">Original</div>
-    <div class="cell cell-c" style="font-weight:600;color:#666;font-size:10px;justify-content:flex-end">Interest</div>
-    <div class="cell cell-d" style="font-weight:600;color:#666;font-size:10px;justify-content:flex-end">Total Due</div>
-    <div class="cell cell-e" style="font-weight:600;color:#666;font-size:10px">Age</div>
-    <div class="cell cell-f" style="font-weight:600;color:#666;font-size:10px">Status</div>
-    <div class="cell cell-g" style="font-weight:600;color:#666;font-size:10px">Next</div>
+    <div class="cell cell-a" style="font-weight:700;color:#333">PROFIT & LOSS</div>
+    <div class="cell cell-b"></div>
+    <div class="cell cell-c" style="font-size:10px;color:#888;justify-content:flex-end">This Qtr</div>
+    <div class="cell cell-d" style="font-size:10px;color:#888;justify-content:flex-end">Lifetime</div>
+    <div class="cell cell-e"></div>
+    <div class="cell cell-f" style="font-size:10px;color:#888">Tax due in ${daysToTax}d</div>
+    <div class="cell cell-g"></div>
     <div class="cell cell-h"></div>
   </div>`;
 
-  // Debt rows
-  for (let i = 0; i < gameState.taxDebts.length; i++) {
-    const d = gameState.taxDebts[i];
-    const interest = d.current - d.original;
-    const daysToNext = d.stage === 'notice1' ? (30 - d.daysOverdue) :
-                       d.stage === 'notice2' ? (90 - d.daysOverdue) :
-                       d.stage === 'garnish' ? (180 - d.daysOverdue) : 0;
-    const nextLabel = d.stage === 'notice1' ? '2nd Notice' :
-                      d.stage === 'notice2' ? 'Garnish' :
-                      d.stage === 'garnish' ? 'Seizure' : '—';
-    const nextText = daysToNext > 0 ? `${nextLabel} ${daysToNext}d` : '—';
+  const totalExpenses = gameState.totalSpentHires + gameState.totalSpentUpgrades + gameState.totalSpentAuto;
 
-    html += `<div class="grid-row tax-debt-row">
+  // Revenue
+  html += `<div class="grid-row pnl-row">
+    <div class="row-num">${rowNum++}</div>
+    <div class="cell cell-a" style="padding-left:16px;color:#444">Revenue</div>
+    <div class="cell cell-b"></div>
+    <div class="cell cell-c" style="color:#217346;font-family:Consolas,monospace;font-size:11px;justify-content:flex-end">${formatMoney(gameState.quarterRevenue)}</div>
+    <div class="cell cell-d" style="color:#217346;font-family:Consolas,monospace;font-size:11px;justify-content:flex-end">${formatMoney(gameState.totalEarned)}</div>
+    <div class="cell cell-e"></div><div class="cell cell-f"></div>
+    <div class="cell cell-g"></div><div class="cell cell-h"></div>
+  </div>`;
+
+  // Expenses
+  html += `<div class="grid-row pnl-row">
+    <div class="row-num">${rowNum++}</div>
+    <div class="cell cell-a" style="padding-left:16px;color:#444">Expenses</div>
+    <div class="cell cell-b"></div>
+    <div class="cell cell-c" style="color:#c00;font-family:Consolas,monospace;font-size:11px;justify-content:flex-end">(${formatMoney(gameState.quarterExpenses)})</div>
+    <div class="cell cell-d" style="color:#c00;font-family:Consolas,monospace;font-size:11px;justify-content:flex-end">(${formatMoney(totalExpenses)})</div>
+    <div class="cell cell-e"></div><div class="cell cell-f"></div>
+    <div class="cell cell-g"></div><div class="cell cell-h"></div>
+  </div>`;
+
+  // Taxes paid
+  html += `<div class="grid-row pnl-row">
+    <div class="row-num">${rowNum++}</div>
+    <div class="cell cell-a" style="padding-left:16px;color:#444">Taxes Paid</div>
+    <div class="cell cell-b"></div>
+    <div class="cell cell-c" style="color:#c00;font-family:Consolas,monospace;font-size:11px;justify-content:flex-end">(${formatMoney(gameState.quarterTaxPaid)})</div>
+    <div class="cell cell-d" style="color:#c00;font-family:Consolas,monospace;font-size:11px;justify-content:flex-end">(${formatMoney(gameState.totalTaxPaid)})</div>
+    <div class="cell cell-e"></div><div class="cell cell-f"></div>
+    <div class="cell cell-g"></div><div class="cell cell-h"></div>
+  </div>`;
+
+  // Net Income (double-underline like real accounting)
+  const qNet = gameState.quarterRevenue - gameState.quarterExpenses - gameState.quarterTaxPaid;
+  const ltNet = gameState.totalEarned - totalExpenses - gameState.totalTaxPaid;
+  const qColor = qNet >= 0 ? '#217346' : '#c00';
+  const ltColor = ltNet >= 0 ? '#217346' : '#c00';
+
+  html += `<div class="grid-row pnl-net">
+    <div class="row-num">${rowNum++}</div>
+    <div class="cell cell-a" style="font-weight:700;color:#333;padding-left:16px">Net Income</div>
+    <div class="cell cell-b"></div>
+    <div class="cell cell-c" style="color:${qColor};font-family:Consolas,monospace;font-size:11px;font-weight:700;justify-content:flex-end;border-top:1px solid #333;border-bottom:3px double #333">${qNet < 0 ? '(' + formatMoney(-qNet) + ')' : formatMoney(qNet)}</div>
+    <div class="cell cell-d" style="color:${ltColor};font-family:Consolas,monospace;font-size:11px;font-weight:700;justify-content:flex-end;border-top:1px solid #333;border-bottom:3px double #333">${ltNet < 0 ? '(' + formatMoney(-ltNet) + ')' : formatMoney(ltNet)}</div>
+    <div class="cell cell-e"></div><div class="cell cell-f"></div>
+    <div class="cell cell-g"></div><div class="cell cell-h"></div>
+  </div>`;
+
+  // ===== TAX LIABILITY (if any debts) =====
+  if (hasTaxDebts) {
+    const stageLabels = {
+      notice1: '1st Notice',
+      notice2: '⚠ 2nd Notice',
+      garnish: '🔴 Garnishment',
+      seizure: '🚨 Seizure',
+    };
+
+    html += `<div class="grid-row sep-row">
       <div class="row-num">${rowNum++}</div>
-      <div class="cell cell-a" style="color:#900">Assessment #${i + 1}</div>
-      <div class="cell cell-b" style="font-family:Consolas,monospace;font-size:11px;color:#c00">${formatMoney(d.original)}</div>
-      <div class="cell cell-c" style="font-family:Consolas,monospace;font-size:11px;color:#c00;justify-content:flex-end">${formatMoney(interest)}</div>
-      <div class="cell cell-d" style="font-family:Consolas,monospace;font-size:11px;color:#c00;font-weight:700;justify-content:flex-end">${formatMoney(d.current)}</div>
-      <div class="cell cell-e" style="color:#888;font-size:11px">${d.daysOverdue}d</div>
-      <div class="cell cell-f" style="font-size:10px">${stageLabels[d.stage]}</div>
-      <div class="cell cell-g" style="font-size:10px;color:#888">${nextText}</div>
-      <div class="cell cell-h"><button class="cell-btn btn-max" onclick="settleTaxDebt(${i})">Settle</button></div>
+      <div class="cell cell-a sep-cell"></div><div class="cell cell-b sep-cell"></div>
+      <div class="cell cell-c sep-cell"></div><div class="cell cell-d sep-cell"></div>
+      <div class="cell cell-e sep-cell"></div><div class="cell cell-f sep-cell"></div>
+      <div class="cell cell-g sep-cell"></div><div class="cell cell-h sep-cell"></div>
+    </div>`;
+
+    html += `<div class="grid-row tax-grid-header">
+      <div class="row-num">${rowNum++}</div>
+      <div class="cell cell-a" style="font-weight:600;color:#900">TAX LIABILITY</div>
+      <div class="cell cell-b" style="font-weight:600;color:#666;font-size:10px">Original</div>
+      <div class="cell cell-c" style="font-weight:600;color:#666;font-size:10px;justify-content:flex-end">Interest</div>
+      <div class="cell cell-d" style="font-weight:600;color:#666;font-size:10px;justify-content:flex-end">Total Due</div>
+      <div class="cell cell-e" style="font-weight:600;color:#666;font-size:10px">Age</div>
+      <div class="cell cell-f" style="font-weight:600;color:#666;font-size:10px">Status</div>
+      <div class="cell cell-g" style="font-weight:600;color:#666;font-size:10px">Next</div>
+      <div class="cell cell-h"></div>
+    </div>`;
+
+    for (let i = 0; i < gameState.taxDebts.length; i++) {
+      const d = gameState.taxDebts[i];
+      const interest = d.current - d.original;
+      const daysToNext = d.stage === 'notice1' ? (30 - d.daysOverdue) :
+                         d.stage === 'notice2' ? (90 - d.daysOverdue) :
+                         d.stage === 'garnish' ? (180 - d.daysOverdue) : 0;
+      const nextLabel = d.stage === 'notice1' ? '2nd Notice' :
+                        d.stage === 'notice2' ? 'Garnish' :
+                        d.stage === 'garnish' ? 'Seizure' : '—';
+      const nextText = daysToNext > 0 ? `${nextLabel} ${daysToNext}d` : '—';
+      const qLabel = d.quarter || '';
+
+      html += `<div class="grid-row tax-debt-row">
+        <div class="row-num">${rowNum++}</div>
+        <div class="cell cell-a" style="color:#900">${qLabel} Assessment</div>
+        <div class="cell cell-b" style="font-family:Consolas,monospace;font-size:11px;color:#c00">${formatMoney(d.original)}</div>
+        <div class="cell cell-c" style="font-family:Consolas,monospace;font-size:11px;color:#c00;justify-content:flex-end">${formatMoney(interest)}</div>
+        <div class="cell cell-d" style="font-family:Consolas,monospace;font-size:11px;color:#c00;font-weight:700;justify-content:flex-end">${formatMoney(d.current)}</div>
+        <div class="cell cell-e" style="color:#888;font-size:11px">${d.daysOverdue}d</div>
+        <div class="cell cell-f" style="font-size:10px">${stageLabels[d.stage]}</div>
+        <div class="cell cell-g" style="font-size:10px;color:#888">${nextText}</div>
+        <div class="cell cell-h"><button class="cell-btn btn-max" onclick="settleTaxDebt(${i})">Settle</button></div>
+      </div>`;
+    }
+
+    const total = totalTaxOwed();
+    const settleAllVis = gameState.taxDebts.length > 1 ? '' : 'display:none';
+    html += `<div class="grid-row tax-total-row">
+      <div class="row-num">${rowNum++}</div>
+      <div class="cell cell-a" style="font-weight:700;color:#900">TOTAL OWED</div>
+      <div class="cell cell-b"></div>
+      <div class="cell cell-c"></div>
+      <div class="cell cell-d" style="font-family:Consolas,monospace;font-size:12px;color:#c00;font-weight:700;justify-content:flex-end">${formatMoney(total)}</div>
+      <div class="cell cell-e"></div><div class="cell cell-f"></div>
+      <div class="cell cell-g"></div>
+      <div class="cell cell-h"><button class="cell-btn btn-max" onclick="settleAllTax()" style="${settleAllVis}">Settle All</button></div>
     </div>`;
   }
 
-  // Total row
-  const total = totalTaxOwed();
-  const settleAllVis = gameState.taxDebts.length > 1 ? '' : 'display:none';
-  html += `<div class="grid-row tax-total-row">
-    <div class="row-num">${rowNum++}</div>
-    <div class="cell cell-a" style="font-weight:700;color:#900">TOTAL OWED</div>
-    <div class="cell cell-b"></div>
-    <div class="cell cell-c"></div>
-    <div class="cell cell-d" style="font-family:Consolas,monospace;font-size:12px;color:#c00;font-weight:700;justify-content:flex-end">${formatMoney(total)}</div>
-    <div class="cell cell-e"></div>
-    <div class="cell cell-f"></div>
-    <div class="cell cell-g"></div>
-    <div class="cell cell-h"><button class="cell-btn btn-max" onclick="settleAllTax()" style="${settleAllVis}">Settle All</button></div>
-  </div>`;
-
   panel.innerHTML = html;
-
-  // Rebuild filler rows to keep total row count consistent
   buildFillerRows();
 }
 
-// Debug: trigger IRS event
+// Debug: trigger quarterly tax
 function triggerIRS() {
-  const irsEvent = EVENTS.find(e => e.sender === 'IRS');
-  showEvent(irsEvent);
+  processQuarterlyTax();
 }
 
 function showEventToast(sender, subject, body, actions) {
@@ -1038,6 +1162,7 @@ function gameTick() {
       if (state.automated) {
         gameState.cash += rev;
         gameState.totalEarned += rev;
+        gameState.quarterRevenue += rev;
       } else {
         state.pendingCollect += rev;
       }
@@ -1046,6 +1171,13 @@ function gameTick() {
 
   // Advance in-game time (1 tick = 1 day)
   gameState.gameElapsedSecs += SECS_PER_DAY;
+
+  // Quarterly tax assessment (every 90 game-days)
+  const currentDay = Math.floor(gameState.gameElapsedSecs / SECS_PER_DAY);
+  if (currentDay - gameState.lastQuarterDay >= 90) {
+    processQuarterlyTax();
+    gameState.lastQuarterDay = currentDay;
+  }
 
   // Tax debt processing (each tick = 1 day)
   processTaxDebts();
@@ -1184,6 +1316,14 @@ function saveGame() {
     gameStartDate: gameState.gameStartDate,
     gameElapsedSecs: gameState.gameElapsedSecs,
     taxDebts: gameState.taxDebts || [],
+    quarterRevenue: gameState.quarterRevenue,
+    quarterExpenses: gameState.quarterExpenses,
+    quarterTaxPaid: gameState.quarterTaxPaid,
+    totalTaxPaid: gameState.totalTaxPaid,
+    totalSpentHires: gameState.totalSpentHires,
+    totalSpentUpgrades: gameState.totalSpentUpgrades,
+    totalSpentAuto: gameState.totalSpentAuto,
+    lastQuarterDay: gameState.lastQuarterDay,
     savedAt: Date.now(),
   };
 
@@ -1221,6 +1361,14 @@ function loadGame() {
     gameState.eventCooldown = 30;
     gameState.miniTaskCooldown = 10;
     gameState.taxDebts = data.taxDebts || [];
+    gameState.quarterRevenue = data.quarterRevenue || 0;
+    gameState.quarterExpenses = data.quarterExpenses || 0;
+    gameState.quarterTaxPaid = data.quarterTaxPaid || 0;
+    gameState.totalTaxPaid = data.totalTaxPaid || 0;
+    gameState.totalSpentHires = data.totalSpentHires || 0;
+    gameState.totalSpentUpgrades = data.totalSpentUpgrades || 0;
+    gameState.totalSpentAuto = data.totalSpentAuto || 0;
+    gameState.lastQuarterDay = data.lastQuarterDay || 0;
 
     // Rebuild sources for selected arc
     gameState.sources = SOURCE_STATS.map((s, i) => ({
