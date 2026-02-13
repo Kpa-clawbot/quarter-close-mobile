@@ -449,7 +449,8 @@ body {
 .cell-c { justify-content: flex-end; color: #217346; font-family: 'Consolas', 'Courier New', monospace; font-size: 11px; }
 .cell-d { justify-content: flex-end; color: #217346; font-family: 'Consolas', 'Courier New', monospace; font-size: 11px; }
 .cell-e, .cell-f { justify-content: center; }
-.cell-g, .cell-h { border-right: none; }
+.cell-g { justify-content: flex-end; color: #217346; font-family: 'Consolas', 'Courier New', monospace; font-size: 11px; }
+.cell-h { border-right: none; }
 
 .empty-cell { border-right: 1px solid #e8e8e8; }
 
