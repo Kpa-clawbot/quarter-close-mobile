@@ -346,6 +346,21 @@ function maxAffordable(source) {
   return count;
 }
 
+function maxAffordableUpgrades(source) {
+  let cash = gameState.cash;
+  let level = source.upgradeLevel;
+  let count = 0;
+  const stats = SOURCE_STATS[source.id];
+  while (count < 100) {
+    const cost = Math.floor(Math.max(50, 10 * stats.baseRate) * Math.pow(2, level));
+    if (cash < cost) break;
+    cash -= cost;
+    level++;
+    count++;
+  }
+  return count;
+}
+
 // Revenue per tick (= per day) for a source
 function sourceRevPerTick(source) {
   if (!source.unlocked || source.employees === 0) return 0;
@@ -787,8 +802,8 @@ function updateGridValues() {
       a1.innerHTML = `<button class="cell-btn btn-hire" disabled>🚫 Frozen (${sLeft}s)</button>`;
     } else {
       const maxHires = maxAffordable(state);
-      a1.innerHTML = `<button class="cell-btn btn-hire" onclick="hireEmployee(${i})" ${gameState.cash >= hCost ? '' : 'disabled'}>Hire ${formatMoney(hCost)}</button>` +
-        (maxHires > 1 ? `<button class="cell-btn btn-max" onclick="hireMax(${i})">Max(${maxHires})</button>` : '');
+      a1.innerHTML = (maxHires > 1 ? `<button class="cell-btn btn-max" onclick="hireMax(${i})">Max(${maxHires})</button>` : '') +
+        `<button class="cell-btn btn-hire" onclick="hireEmployee(${i})" ${gameState.cash >= hCost ? '' : 'disabled'}>Hire ${formatMoney(hCost)}</button>`;
     }
 
     // Action 2: Upgrade or Automate
@@ -796,7 +811,9 @@ function updateGridValues() {
     if (!state.automated) {
       a2.innerHTML = `<button class="cell-btn btn-automate" onclick="automateSource(${i})" ${gameState.cash >= aCost ? '' : 'disabled'} title="Revenue flows automatically">Auto ${formatMoney(aCost)}</button>`;
     } else {
-      a2.innerHTML = `<button class="cell-btn btn-upgrade" onclick="upgradeSource(${i})" ${gameState.cash >= uCost ? '' : 'disabled'} title="+50% efficiency per employee">⬆ ${formatMoney(uCost)}</button>`;
+      const maxUpgrades = maxAffordableUpgrades(state);
+      a2.innerHTML = (maxUpgrades > 1 ? `<button class="cell-btn btn-max" onclick="upgradeMax(${i})">Max(${maxUpgrades})</button>` : '') +
+        `<button class="cell-btn btn-upgrade" onclick="upgradeSource(${i})" ${gameState.cash >= uCost ? '' : 'disabled'} title="+50% efficiency per employee">⬆ ${formatMoney(uCost)}</button>`;
     }
 
     // Action 3: Collect (click) or AUTO badge
@@ -941,6 +958,28 @@ function hireMax(index) {
   if (hired > 0) {
     addCapitalExpense(totalCost);
     gameState.totalSpentHires += totalCost;
+    updateGridValues();
+    updateDisplay();
+    flashCash();
+  }
+}
+
+function upgradeMax(index) {
+  const state = gameState.sources[index];
+  if (!state.unlocked) return;
+  let upgraded = 0;
+  let totalCost = 0;
+  while (upgraded < 100) {
+    const cost = upgradeCost(state);
+    if (gameState.cash < cost) break;
+    gameState.cash -= cost;
+    state.upgradeLevel++;
+    totalCost += cost;
+    upgraded++;
+  }
+  if (upgraded > 0) {
+    addCapitalExpense(totalCost);
+    gameState.totalSpentUpgrades += totalCost;
     updateGridValues();
     updateDisplay();
     flashCash();
