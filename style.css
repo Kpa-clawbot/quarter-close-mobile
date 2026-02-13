@@ -1387,16 +1387,17 @@ body {
   to { width: 100%; }
 }
 
-/* Valuation chart (embedded Excel chart style) */
+/* Valuation chart (floating Excel chart object, right side) */
 #valuation-chart-container {
-  margin: 4px 0 4px 28px; /* align with grid cells (past row-num gutter) */
+  position: fixed;
+  right: 20px;
+  top: 100px;
   padding: 8px 12px;
   background: #fff;
   border: 1px solid #b0b0b0;
   border-radius: 2px;
   box-shadow: 1px 1px 3px rgba(0,0,0,0.08);
-  max-width: 580px;
-  position: relative;
+  z-index: 10;
 }
 
 .chart-title {
