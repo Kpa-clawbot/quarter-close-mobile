@@ -2169,24 +2169,23 @@ function getCompanyValuation() {
   let growthMod = 1.0;
   const hist = gameState.valuationHistory;
   if (hist && hist.length >= 10) {
-    // Compare current annualRev to what it was ~10 samples ago
     const oldVal = hist[hist.length - 10].val;
     const currentVal = gameState.cash + annualRev * baseMult;
     if (oldVal > 0) {
       const growthRate = (currentVal - oldVal) / oldVal;
-      // Fast growth: up to 3× multiplier. Flat/decline: down to 0.5×
-      if (growthRate > 0.5) growthMod = 3.0;       // rocketship (>50% growth)
-      else if (growthRate > 0.2) growthMod = 2.0;   // strong growth
-      else if (growthRate > 0.05) growthMod = 1.5;  // healthy growth
-      else if (growthRate > 0.01) growthMod = 1.2;  // modest growth
-      else if (growthRate > -0.05) growthMod = 1.0;  // flat
-      else if (growthRate > -0.2) growthMod = 0.7;   // declining
-      else growthMod = 0.5;                          // in freefall
+      // Mild modifier: 0.85× to 1.5×
+      if (growthRate > 0.5) growthMod = 1.5;
+      else if (growthRate > 0.2) growthMod = 1.3;
+      else if (growthRate > 0.05) growthMod = 1.15;
+      else if (growthRate > 0.01) growthMod = 1.05;
+      else if (growthRate > -0.05) growthMod = 1.0;
+      else if (growthRate > -0.2) growthMod = 0.9;
+      else growthMod = 0.85;
     }
   }
 
-  // Market noise — small random factor (±5%) so line isn't perfectly smooth
-  const noise = 0.95 + Math.random() * 0.10;
+  // Market noise — ±2% so line wiggles but doesn't swing wildly
+  const noise = 0.98 + Math.random() * 0.04;
 
   // Subtract tax debt from valuation (liabilities)
   let taxLiabilities = 0;
