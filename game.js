@@ -1557,7 +1557,7 @@ function updateTaxPanel() {
     const onTrack = qRev >= expectedAtThisPoint;
     const trackLabel = onTrack ? '✅ On Track' : '⚠️ Off Track';
     const trackColor = onTrack ? '#217346' : '#c00';
-    const trackDetail = `${onTrack ? '+' : ''}${formatMoney(trackDiff)} (${trackPct >= 0 ? '+' : ''}${trackPct.toFixed(1)}%)`;
+    const trackDetail = `${onTrack ? '+' : ''}${formatCompact(trackDiff)} (${trackPct >= 0 ? '+' : ''}${trackPct.toFixed(1)}%)`;
     const streakVal = gameState.earningsStreak;
     const streakStr = streakVal > 0 ? `🔥 ${streakVal} beat${streakVal > 1 ? 's' : ''}` :
                       streakVal < 0 ? `❄️ ${Math.abs(streakVal)} miss${Math.abs(streakVal) > 1 ? 'es' : ''}` : '—';
@@ -1603,7 +1603,7 @@ function updateTaxPanel() {
       <div class="cell cell-a" style="padding-left:16px;color:#444">Revenue vs Target</div>
       <div class="cell cell-b" style="font-weight:700;color:${trackColor}">${trackLabel}</div>
       <div class="cell cell-c" style="font-family:Consolas,monospace;font-size:11px;color:${trackColor}">${trackDetail}</div>
-      <div class="cell cell-d" style="font-size:10px;color:#888">${formatMoney(qRev)} / ${formatMoney(target)}</div>
+      <div class="cell cell-d" style="font-size:10px;color:#888">${formatCompact(qRev)} / ${formatCompact(target)}</div>
       <div class="cell cell-e"></div>
       <div class="cell cell-f"></div>
       <div class="cell cell-g"></div>
@@ -1616,7 +1616,7 @@ function updateTaxPanel() {
       <div class="cell cell-a" style="padding-left:16px;color:#444">Guidance</div>
       <div class="cell cell-b" style="font-weight:600;color:#333">${guidanceLevel.emoji} ${guidanceLevel.label}</div>
       <div class="cell cell-c" style="font-size:10px;color:#888;justify-content:flex-end">${guidanceLevel.reMult}× RE</div>
-      <div class="cell cell-d" style="font-size:10px;color:#888">Target: ${formatMoney(gameState.guidanceTarget)}</div>
+      <div class="cell cell-d" style="font-size:10px;color:#888">Target: ${formatCompact(gameState.guidanceTarget)}</div>
       <div class="cell cell-e"></div>
       <div class="cell cell-f" style="font-size:10px;color:#999">Set at earnings</div>
       <div class="cell cell-g"></div>
@@ -2940,11 +2940,13 @@ function drawValuationChart() {
 }
 
 function formatCompact(n) {
-  if (n >= 1e12) return '$' + (n / 1e12).toFixed(1) + 'T';
-  if (n >= 1e9) return '$' + (n / 1e9).toFixed(1) + 'B';
-  if (n >= 1e6) return '$' + (n / 1e6).toFixed(1) + 'M';
-  if (n >= 1e3) return '$' + (n / 1e3).toFixed(1) + 'K';
-  return '$' + Math.floor(n);
+  const sign = n < 0 ? '-' : '';
+  const a = Math.abs(n);
+  if (a >= 1e12) return sign + '$' + (a / 1e12).toFixed(1) + 'T';
+  if (a >= 1e9) return sign + '$' + (a / 1e9).toFixed(1) + 'B';
+  if (a >= 1e6) return sign + '$' + (a / 1e6).toFixed(1) + 'M';
+  if (a >= 1e3) return sign + '$' + (a / 1e3).toFixed(1) + 'K';
+  return sign + '$' + Math.floor(a);
 }
 
 window.unlockSource = unlockSource;
