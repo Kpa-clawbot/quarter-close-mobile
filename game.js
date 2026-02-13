@@ -976,8 +976,10 @@ function processTaxDebts() {
     // Seizure: IRS just takes it
     if (debt.stage === 'seizure') {
       const penalty = Math.floor(debt.current * 1.25); // 25% penalty on top
-      gameState.cash -= penalty;
-      if (gameState.cash < 0) gameState.cash = 0;
+      const seized = Math.min(penalty, gameState.cash);
+      gameState.cash -= seized;
+      gameState.quarterTaxPaid += seized;
+      gameState.totalTaxPaid += seized;
       showEventToast('IRS', 'Asset Seizure Notice',
         `The IRS has seized ${formatMoney(penalty)} from your accounts. Tax debt of ${formatMoney(debt.current)} plus 25% penalty. This was avoidable.`,
         [{ label: 'OK', effect: () => 'Assets seized. Consider paying next time.' }]);
@@ -1013,6 +1015,8 @@ function settleTaxDebt(index) {
     return;
   }
   gameState.cash -= debt.current;
+  gameState.quarterTaxPaid += debt.current;
+  gameState.totalTaxPaid += debt.current;
   gameState.taxDebts.splice(index, 1);
   updateTaxPanel();
   updateDisplay();
@@ -1027,6 +1031,8 @@ function settleAllTax() {
     return;
   }
   gameState.cash -= total;
+  gameState.quarterTaxPaid += total;
+  gameState.totalTaxPaid += total;
   gameState.taxDebts = [];
   updateTaxPanel();
   updateDisplay();
