@@ -547,9 +547,15 @@ function buildFillerRows() {
   const ROW_HEIGHT = 28;
   const gridBottom = filler.getBoundingClientRect().top;
   const viewportHeight = window.innerHeight;
-  const bottomChrome = 55; // revenue bar + sheet tabs + status bar
+  // Measure actual bottom chrome height
+  const revBar = document.getElementById('revenue-breakdown');
+  const sheetTabs = document.getElementById('sheet-tabs');
+  const statusBar = document.getElementById('status-bar');
+  const bottomChrome = (revBar ? revBar.offsetHeight : 0) +
+                        (sheetTabs ? sheetTabs.offsetHeight : 0) +
+                        (statusBar ? statusBar.offsetHeight : 0);
   const available = viewportHeight - gridBottom - bottomChrome;
-  const fillerCount = Math.max(3, Math.ceil(available / ROW_HEIGHT));
+  const fillerCount = Math.max(3, Math.ceil(available / ROW_HEIGHT) + 1);
 
   const startRow = SOURCE_STATS.length + 4 + taxRowCount;
   for (let i = 0; i < fillerCount; i++) {
