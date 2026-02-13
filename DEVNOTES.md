@@ -56,13 +56,17 @@
 - **IRS tax toasts never auto-expire** — too important to auto-fire (expiresMs: 0)
 - **Late-game tiers stay grounded** — no sci-fi/absurd names. Tech companies ARE the endgame.
 - **Fractal market noise** — volatility itself is a random walk (0.05-1.0), three noise frequencies (fast/slow/shock), creating realistic calm→chaotic chart patterns
+- **Earnings modals never auto-expire** — like IRS toasts, they use `expiresMs: 0` because guidance selection is an important decision
+- **Earnings and tax are independent cycles** — both fire every 90 game-days but use separate counters (`lastEarningsDay` vs `lastQuarterDay`), so they don't interfere
+- **Stock price is derived, not stored** — `getStockPrice()` = `getCompanyValuation() / sharesOutstanding`, recalculated each tick
+- **`_earningsMultiplier` persists stock reactions** — discrete jumps from earnings beats/misses layer on top of fractal noise via a multiplier on valuation
 
 ## Architecture Notes
 
 ### Tax Panel DOM Rebuild
-- `updateTaxPanel()` rebuilds innerHTML for P&L + tax liability sections
+- `updateTaxPanel()` rebuilds innerHTML for P&L + tax liability + IR sections
 - Called every tick from `updateDisplay()`, but uses hash-based diffing (`_lastTaxPanelHash`) to skip rebuilds when data hasn't changed
-- Settle buttons use event delegation on `#tax-panel` (stable parent survives innerHTML rebuilds)
+- Settle buttons and guidance buttons use event delegation on `#tax-panel` (stable parent survives innerHTML rebuilds)
 - **Lesson:** When innerHTML is rebuilt frequently, NEVER rely on button stability — use event delegation AND minimize unnecessary rebuilds
 
 ### Event Toast System
@@ -75,9 +79,23 @@
 ### Valuation Chart
 - Canvas-rendered, `#4472C4` Excel blue line, gray gridlines, gradient fill
 - Formula: `Cash + (Annual Revenue × baseMult × growthMod × noise) - taxLiabilities`
+- Post-IPO: valuation × `_earningsMultiplier` (stock price reactions from earnings)
 - Draggable + resizable floating overlay, positioned right of Rev/yr column
 - `_volState` tracks volatility random walk for fractal noise
 - Max 200 data points, sampled every tick, persisted in save/load
+
+### Phase 2.1: IPO + Earnings System
+- **IPO trigger**: `checkIPOTrigger()` fires when `getCompanyValuation() >= $5T`, shows non-expiring toast with accept/decline
+- **IPO execution**: `executeIPO()` sets `isPublic=true`, initializes 1B shares, sets default In-Line guidance, records `lastEarningsDay` and `ipoStockPriceStart`
+- **IR section**: Rendered inside `updateTaxPanel()` (below P&L, above Tax Liability). Shows quarter, days left, revenue vs target (with inline progress bar), guidance buttons, streak, stock price + QTD%, retained earnings
+- **Guidance buttons**: 4 inline buttons (🛡️ 📊 🎯 🔥) in the IR grid section, active one highlighted with `ir-active` class. Click handler via event delegation on `#tax-panel`
+- **Earnings processing**: `processEarnings()` fires every 90 game-days post-IPO. Compares `earningsQuarterRevenue` to `guidanceTarget`, calculates beat/miss margin, applies stock change via `_earningsMultiplier`, awards RE on beats, updates analyst baseline + streak
+- **Earnings revenue tracking**: `trackEarningsRevenue(amount)` called wherever revenue is added (gameTick, miniTask, goldenCell, big client events, automation collection). Keeps `earningsQuarterRevenue` in sync without duplicating revenue
+- **Retained Earnings formula**: `Math.floor(qRevenue × 0.001 × guidanceMult × marginBonus × streakMult)` — miss = 0 RE. Accumulates but not spendable until Phase 2.2
+- **Analyst ratchet**: `analystBaseline` starts at 1.0, moves ×1.05 on beat, ×0.97 on miss, ×1.15 on 3+ consecutive beats, ×0.90 on 2+ consecutive misses. Affects projected revenue calculation for next quarter's guidance target
+- **Stock price display**: Two places — `#stock-price-cell` in the cash row (cell B2), and `#stock-ticker` in the status bar (gold colored)
+- **Debug**: 🧪 IPO button calls `forceIPO()` — triggers IPO regardless of valuation
+- **Save/load**: All new fields have fallback defaults (`|| false`, `|| 0`, `|| null`, `|| 1.0`). `_earningsMultiplier` also persisted.
 
 ### Save Compatibility
 - All new fields use fallback defaults: `data.field || 0`, `data.array || []`
@@ -108,7 +126,7 @@
 
 ## Commit History
 
-~47 commits on master. Key milestones:
+~50 commits on master. Key milestones:
 - `4ed71a0` — IRS tax debt escalation system
 - `49adcbf` — P&L section + quarterly tax
 - `0e76116` — Depreciation mechanic
@@ -120,4 +138,7 @@
 - `b7b8da4` — Fractal market noise
 - `a1ddb92` — V13 preview image (OG embed)
 - `35610df` — Fix flaky Settle button (hash-based DOM rebuild)
+- `b2e792c` — Phase 2 spec added
+- `03a48cd` — Phase 2 restructured into sub-phases
+- `20348f8` — **Phase 2.1: IPO + Manual Earnings System** (v0.2.0)
 - `20348f8` — Phase 2.1: IPO + Manual Earnings System
