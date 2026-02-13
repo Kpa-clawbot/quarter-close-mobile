@@ -1585,6 +1585,13 @@ function gameTick() {
       gameState.revPenalty = null;
     }
 
+    let bonusMult = 1;
+    if (gameState.revBonus && now < gameState.revBonus.until) {
+      bonusMult = gameState.revBonus.mult;
+    } else {
+      gameState.revBonus = null;
+    }
+
     // Tax garnishment
     const garnishActive = gameState.taxDebts && gameState.taxDebts.some(d => d.stage === 'garnish');
     if (garnishActive) penaltyMult *= 0.85;
@@ -1592,7 +1599,7 @@ function gameTick() {
     for (const state of gameState.sources) {
       if (!state.unlocked || state.employees === 0) continue;
       const fullRev = sourceRevPerTick(state);
-      const rev = fullRev * penaltyMult;
+      const rev = fullRev * penaltyMult * bonusMult;
       const garnished = garnishActive ? Math.floor(fullRev * 0.15) : 0;
 
       if (state.automated) {
