@@ -200,6 +200,82 @@ body {
   background: #1a5c38;
 }
 
+/* Help Modal */
+#help-modal {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+}
+
+#help-content {
+  background: white;
+  border: 1px solid #d0d0d0;
+  border-radius: 6px;
+  max-width: 520px;
+  max-height: 80vh;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+  display: flex;
+  flex-direction: column;
+}
+
+.help-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px 12px;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.help-header h3 {
+  font-size: 16px;
+  color: #217346;
+  margin: 0;
+}
+
+.help-close {
+  background: none;
+  border: none;
+  font-size: 16px;
+  color: #999;
+  cursor: pointer;
+  padding: 2px 6px;
+}
+
+.help-close:hover {
+  color: #333;
+}
+
+.help-body {
+  padding: 16px 20px;
+  overflow-y: auto;
+  font-size: 12px;
+  line-height: 1.5;
+  color: #444;
+}
+
+.help-section {
+  margin-bottom: 14px;
+}
+
+.help-section h4 {
+  font-size: 13px;
+  color: #217346;
+  margin: 0 0 4px;
+}
+
+.help-section p {
+  margin: 3px 0;
+  color: #555;
+}
+
+.help-section b {
+  color: #333;
+}
+
 /* Confirm Dialog */
 #confirm-modal {
   position: fixed;

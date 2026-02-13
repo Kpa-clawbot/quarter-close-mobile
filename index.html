@@ -57,7 +57,7 @@
       <span class="menu-item">Data</span>
       <span class="menu-item">Review</span>
       <span class="menu-item">View</span>
-      <span class="menu-item">Help</span>
+      <span class="menu-item" onclick="showHelp()">Help</span>
     </div>
 
     <!-- Toolbar -->
@@ -320,6 +320,70 @@
       <p>An idle tycoon game disguised as a spreadsheet.</p>
       <p style="margin-top:12px;color:#999;">Build your empire. Look like you're working.</p>
       <button onclick="dismissAbout()">OK</button>
+    </div>
+  </div>
+
+  <!-- ===== HELP MODAL ===== -->
+  <div id="help-modal" class="hidden">
+    <div id="help-content">
+      <div class="help-header">
+        <h3>📊 Quarter Close — Help</h3>
+        <button class="help-close" onclick="dismissHelp()">✕</button>
+      </div>
+      <div class="help-body">
+        <div class="help-section">
+          <h4>🎯 Goal</h4>
+          <p>Build a company from nothing. Start with a lemonade stand, end with a tech empire. The spreadsheet is your cover — it looks like you're working.</p>
+        </div>
+
+        <div class="help-section">
+          <h4>💰 Making Money</h4>
+          <p><b>Click "Collect"</b> on a department to grab its pending revenue. Early on, clicking is your main income.</p>
+          <p><b>Hire employees</b> to increase a department's revenue per day. More staff = more money.</p>
+          <p><b>Upgrade</b> departments to multiply each employee's output (2×, 4×, 8×...).</p>
+          <p><b>Automate</b> a department so it collects revenue automatically — no clicking needed.</p>
+          <p><b>Unlock new departments</b> as you earn enough. Higher tiers earn exponentially more.</p>
+        </div>
+
+        <div class="help-section">
+          <h4>📋 Mini-Tasks</h4>
+          <p>Outlook-style task notifications pop up periodically. Click <b>✔ Approve</b> for bonus cash. They auto-expire in 10 seconds — if you miss it, your streak resets.</p>
+          <p><b>Streaks:</b> 3 in a row = 1.5× reward, 5 = 2×, 10 = 3×.</p>
+        </div>
+
+        <div class="help-section">
+          <h4>📧 Events</h4>
+          <p>Random events pop up as Outlook-style toasts (Mom's investment, angry customers, viral TikTok moments). Each has a 10-second timer — the last option auto-fires if you don't choose.</p>
+          <p><b>Golden cells</b> occasionally glow gold in the grid — click them fast for a big bonus!</p>
+        </div>
+
+        <div class="help-section">
+          <h4>🏛️ Taxes</h4>
+          <p>Every 90 game-days, the IRS sends a quarterly tax bill.</p>
+          <p><b>Regular tax:</b> 25% of (Revenue − Depreciation).</p>
+          <p><b>AMT floor:</b> You always pay at least 15% of gross revenue — no deducting your way to zero.</p>
+          <p><b>Pay or ignore</b> — but ignored bills accrue 1% daily interest and escalate: Notice → 2nd Notice → Garnishment (−15% revenue) → Asset Seizure.</p>
+          <p><b>Depreciation:</b> Capital spending (hires, upgrades, automation) is deducted over 4 quarters, not immediately.</p>
+        </div>
+
+        <div class="help-section">
+          <h4>📈 Valuation Chart</h4>
+          <p>The floating chart shows your company's valuation over time. Drag to move, resize from the corner. Valuation = Cash + (Annual Revenue × market multiple).</p>
+        </div>
+
+        <div class="help-section">
+          <h4>⌨️ Tips</h4>
+          <p><b>Esc</b> — Boss key! Switches to a fake empty spreadsheet instantly.</p>
+          <p><b>Ctrl+S</b> — Save game. Auto-save is on by default.</p>
+          <p><b>File → New Game</b> — Start over with a different career path.</p>
+          <p><b>Click any cell</b> to see its reference in the formula bar (just like Excel).</p>
+        </div>
+
+        <div class="help-section">
+          <h4>🔢 Max Buttons</h4>
+          <p>When you can afford 2+ hires or upgrades, a <b>Max(N)</b> link appears — click it to buy them all at once.</p>
+        </div>
+      </div>
     </div>
   </div>
 

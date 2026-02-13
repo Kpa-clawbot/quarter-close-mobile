@@ -2004,6 +2004,15 @@ function dismissAbout() {
   document.getElementById('about-modal').classList.add('hidden');
 }
 
+function showHelp() {
+  closeFileMenu();
+  document.getElementById('help-modal').classList.remove('hidden');
+}
+
+function dismissHelp() {
+  document.getElementById('help-modal').classList.add('hidden');
+}
+
 let pendingConfirmAction = null;
 
 function confirmNewGame() {
@@ -2296,6 +2305,8 @@ window.dismissAbout = dismissAbout;
 window.confirmNewGame = confirmNewGame;
 window.confirmAction = confirmAction;
 window.dismissConfirm = dismissConfirm;
+window.showHelp = showHelp;
+window.dismissHelp = dismissHelp;
 
 document.addEventListener('DOMContentLoaded', init);
 window.addEventListener('resize', () => { if (gridBuilt) buildFillerRows(); });
