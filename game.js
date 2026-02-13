@@ -2151,10 +2151,6 @@ function getCompanyValuation() {
 }
 
 function sampleValuation() {
-  valuationTickCounter++;
-  if (valuationTickCounter < 5) return; // sample every 5 ticks
-  valuationTickCounter = 0;
-
   const day = Math.floor(gameState.gameElapsedSecs / SECS_PER_DAY);
   const val = getCompanyValuation();
   if (!gameState.valuationHistory) gameState.valuationHistory = [];
@@ -2169,7 +2165,7 @@ function sampleValuation() {
 function drawValuationChart() {
   const container = document.getElementById('valuation-chart-container');
   const hist = gameState.valuationHistory;
-  if (!hist || hist.length < 2) {
+  if (!hist || hist.length < 1) {
     container.classList.add('hidden');
     return;
   }
@@ -2227,25 +2223,34 @@ function drawValuationChart() {
   ctx.lineWidth = 2;
   ctx.lineJoin = 'round';
 
-  for (let i = 0; i < hist.length; i++) {
-    const x = padL + (i / (hist.length - 1)) * cW;
-    const y = padT + cH - ((hist[i].val - minVal) / range) * cH;
-    if (i === 0) ctx.moveTo(x, y);
-    else ctx.lineTo(x, y);
-  }
-  ctx.stroke();
+  if (hist.length === 1) {
+    // Single point — draw a dot in the center
+    const x = padL + cW / 2;
+    const y = padT + cH / 2;
+    ctx.arc(x, y, 3, 0, Math.PI * 2);
+    ctx.fillStyle = '#4472C4';
+    ctx.fill();
+  } else {
+    for (let i = 0; i < hist.length; i++) {
+      const x = padL + (i / (hist.length - 1)) * cW;
+      const y = padT + cH - ((hist[i].val - minVal) / range) * cH;
+      if (i === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    }
+    ctx.stroke();
 
-  // Fill under line (subtle gradient)
-  const lastX = padL + cW;
-  const lastY = padT + cH - ((hist[hist.length - 1].val - minVal) / range) * cH;
-  ctx.lineTo(lastX, padT + cH);
-  ctx.lineTo(padL, padT + cH);
-  ctx.closePath();
-  const grad = ctx.createLinearGradient(0, padT, 0, padT + cH);
-  grad.addColorStop(0, 'rgba(68, 114, 196, 0.15)');
-  grad.addColorStop(1, 'rgba(68, 114, 196, 0.02)');
-  ctx.fillStyle = grad;
-  ctx.fill();
+    // Fill under line (subtle gradient)
+    const lastX = padL + cW;
+    const lastY = padT + cH - ((hist[hist.length - 1].val - minVal) / range) * cH;
+    ctx.lineTo(lastX, padT + cH);
+    ctx.lineTo(padL, padT + cH);
+    ctx.closePath();
+    const grad = ctx.createLinearGradient(0, padT, 0, padT + cH);
+    grad.addColorStop(0, 'rgba(68, 114, 196, 0.15)');
+    grad.addColorStop(1, 'rgba(68, 114, 196, 0.02)');
+    ctx.fillStyle = grad;
+    ctx.fill();
+  }
 
   // Current valuation label (top right)
   const current = vals[vals.length - 1];
