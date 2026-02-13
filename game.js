@@ -1956,6 +1956,32 @@ document.addEventListener('click', (e) => {
   if (fileMenuOpen && !e.target.closest('#file-menu')) {
     closeFileMenu();
   }
+
+  // Formula bar: update cell reference on click
+  const cell = e.target.closest('.cell');
+  if (cell) {
+    const row = cell.closest('.grid-row');
+    if (row) {
+      const colMap = { 'cell-a': 'A', 'cell-b': 'B', 'cell-c': 'C', 'cell-d': 'D',
+                       'cell-e': 'E', 'cell-f': 'F', 'cell-g': 'G', 'cell-h': 'H' };
+      let col = '';
+      for (const [cls, letter] of Object.entries(colMap)) {
+        if (cell.classList.contains(cls)) { col = letter; break; }
+      }
+      const rowNumEl = row.querySelector('.row-num');
+      const rowNum = rowNumEl ? rowNumEl.textContent : '';
+      if (col && rowNum) {
+        const ref = col + rowNum;
+        document.getElementById('cell-ref').textContent = ref;
+        // Show cell content as formula
+        const text = cell.textContent.trim();
+        document.getElementById('formula-input').textContent = text || '';
+        // Highlight selected cell
+        document.querySelectorAll('.cell.selected-cell').forEach(c => c.classList.remove('selected-cell'));
+        cell.classList.add('selected-cell');
+      }
+    }
+  }
 });
 
 // ===== INITIALIZATION =====
