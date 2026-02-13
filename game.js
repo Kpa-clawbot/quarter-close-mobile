@@ -166,6 +166,7 @@ let gameState = {
   totalPlayTime: 0,
   miniTaskCooldown: 0,
   miniTaskActive: false,
+  totalClicks: 0,
 };
 
 let gridBuilt = false;
@@ -336,6 +337,7 @@ function completeMiniTask() {
   const reward = parseFloat(bar.dataset.reward) || 0;
   gameState.cash += reward;
   gameState.totalEarned += reward;
+  gameState.totalClicks++;
   bar.classList.add('hidden');
   gameState.miniTaskActive = false;
   gameState.miniTaskCooldown = 15 + Math.floor(Math.random() * 15); // 15-30s cooldown
@@ -509,6 +511,7 @@ function updateDisplay() {
     ? `⏱ ${hrs}:${String(mins).padStart(2,'0')}:${String(secs).padStart(2,'0')}`
     : `⏱ ${mins}:${String(secs).padStart(2,'0')}`;
   document.getElementById('status-time').textContent = timeStr;
+  document.getElementById('status-clicks').textContent = '🖱 ' + gameState.totalClicks;
 
   const activeCount = gameState.sources.filter(s => s.unlocked).length;
   const lastRow = activeCount + 3;
@@ -589,6 +592,7 @@ function collectSource(index) {
   const clickEarnings = src.clickValue + state.pendingCollect;
   gameState.cash += clickEarnings;
   gameState.totalEarned += clickEarnings;
+  gameState.totalClicks++;
   state.pendingCollect = 0;
 
   const row = document.getElementById(`source-row-${index}`);
@@ -733,6 +737,7 @@ function saveGame() {
     })),
     seriesAShown: gameState.seriesAShown,
     totalPlayTime: gameState.totalPlayTime,
+    totalClicks: gameState.totalClicks,
     savedAt: Date.now(),
   };
 
@@ -764,6 +769,7 @@ function loadGame() {
     gameState.totalEarned = data.totalEarned || 0;
     gameState.seriesAShown = data.seriesAShown || false;
     gameState.totalPlayTime = data.totalPlayTime || 0;
+    gameState.totalClicks = data.totalClicks || 0;
     gameState.eventCooldown = 30;
     gameState.miniTaskCooldown = 10;
 
@@ -825,6 +831,7 @@ function resetGame() {
   gameState.sources = [];
   gameState.seriesAShown = false;
   gameState.totalPlayTime = 0;
+  gameState.totalClicks = 0;
   showArcSelect();
 }
 
