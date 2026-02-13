@@ -399,6 +399,14 @@
   </div>
 
   <script src="game.js"></script>
-  <script data-goatcounter="https://quarter-close.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
+  <script>
+    if (location.hostname === 'kpa-clawbot.github.io') {
+      var s = document.createElement('script');
+      s.async = true;
+      s.dataset.goatcounter = 'https://quarter-close.goatcounter.com/count';
+      s.src = '//gc.zgo.at/count.js';
+      document.body.appendChild(s);
+    }
+  </script>
 </body>
 </html>
