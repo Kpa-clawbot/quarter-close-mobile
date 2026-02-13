@@ -876,6 +876,47 @@ body {
   background: #106ebe;
 }
 
+/* Timed event countdown */
+.toast-countdown-wrapper {
+  position: relative;
+  height: 28px;
+  background: #e0e0e0;
+  border-radius: 3px;
+  overflow: hidden;
+  flex: 1;
+}
+
+.toast-countdown-bar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  background: linear-gradient(90deg, #d32f2f, #ff6659);
+  animation: countdown-fill linear forwards;
+  width: 0%;
+}
+
+@keyframes countdown-fill {
+  from { width: 0%; }
+  to { width: 100%; }
+}
+
+.toast-countdown-label {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 600;
+  color: white;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+  z-index: 1;
+}
+
 /* ============================================
    Offline Modal
    ============================================ */

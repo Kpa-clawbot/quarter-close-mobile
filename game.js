@@ -175,13 +175,14 @@ const EVENTS = [
   {
     sender: 'IT Department',
     subject: '⚠️ POWER OUTAGE - Building 3',
-    body: 'Emergency maintenance required. All systems will be offline for approximately 15 seconds.',
-    actions: [
-      { label: 'OK (rev paused 15s)', effect: (gs) => {
-        gs.powerOutage = { until: Date.now() + 15000 };
-        return '⚡ Power outage! Revenue paused for 15 seconds.';
-      }},
-    ]
+    body: 'Emergency maintenance required. All systems will be offline for approximately 15 seconds. This cannot be prevented.',
+    timed: true,
+    timedDelay: 5000,  // 5 second countdown
+    timedEffect: (gs) => {
+      gs.powerOutage = { until: Date.now() + 15000 };
+      return '⚡ Power outage! Revenue paused for 15 seconds.';
+    },
+    actions: []
   },
 ];
 
@@ -795,21 +796,54 @@ function showEvent(event) {
 
   const actionsDiv = document.getElementById('toast-actions');
   actionsDiv.innerHTML = '';
-  event.actions.forEach((action, i) => {
-    const btn = document.createElement('button');
-    btn.className = 'toast-btn' + (i === 0 ? ' toast-primary' : '');
-    btn.textContent = action.label;
-    btn.onclick = () => {
-      const result = action.effect(gameState);
+
+  if (event.timed) {
+    // Countdown bar — effect fires when it fills
+    const wrapper = document.createElement('div');
+    wrapper.className = 'toast-countdown-wrapper';
+    const bar = document.createElement('div');
+    bar.className = 'toast-countdown-bar';
+    bar.style.animationDuration = (event.timedDelay / 1000) + 's';
+    wrapper.appendChild(bar);
+
+    const label = document.createElement('span');
+    label.className = 'toast-countdown-label';
+    label.textContent = 'Systems shutting down...';
+    wrapper.appendChild(label);
+
+    actionsDiv.appendChild(wrapper);
+
+    // Hide close button for timed events
+    document.getElementById('toast-close').style.display = 'none';
+
+    setTimeout(() => {
+      const result = event.timedEffect(gameState);
       document.getElementById('status-text').textContent = result;
       setTimeout(() => {
         document.getElementById('status-text').textContent = 'Ready';
       }, 3000);
+      document.getElementById('toast-close').style.display = '';
       dismissEvent();
       updateDisplay();
-    };
-    actionsDiv.appendChild(btn);
-  });
+    }, event.timedDelay);
+  } else {
+    document.getElementById('toast-close').style.display = '';
+    event.actions.forEach((action, i) => {
+      const btn = document.createElement('button');
+      btn.className = 'toast-btn' + (i === 0 ? ' toast-primary' : '');
+      btn.textContent = action.label;
+      btn.onclick = () => {
+        const result = action.effect(gameState);
+        document.getElementById('status-text').textContent = result;
+        setTimeout(() => {
+          document.getElementById('status-text').textContent = 'Ready';
+        }, 3000);
+        dismissEvent();
+        updateDisplay();
+      };
+      actionsDiv.appendChild(btn);
+    });
+  }
 
   toast.classList.remove('hidden');
 }
