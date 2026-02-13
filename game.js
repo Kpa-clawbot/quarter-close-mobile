@@ -2159,10 +2159,45 @@ function positionChartDefault() {
 
 function getCompanyValuation() {
   // Valuation = cash + annual revenue × revenue multiple
-  // Revenue multiple scales with company size (early: 5×, late: 15×)
+  // Multiple = base (size) × growth modifier × small random noise
   const annualRev = totalRevPerTick() * 365.25;
-  const revMultiple = annualRev > 1e9 ? 15 : annualRev > 1e8 ? 12 : annualRev > 1e7 ? 10 : annualRev > 1e6 ? 8 : 5;
-  return gameState.cash + annualRev * revMultiple;
+
+  // Base multiple scales with company size
+  const baseMult = annualRev > 1e9 ? 15 : annualRev > 1e8 ? 12 : annualRev > 1e7 ? 10 : annualRev > 1e6 ? 8 : 5;
+
+  // Growth rate modifier — compare current rev to recent history
+  let growthMod = 1.0;
+  const hist = gameState.valuationHistory;
+  if (hist && hist.length >= 10) {
+    // Compare current annualRev to what it was ~10 samples ago
+    const oldVal = hist[hist.length - 10].val;
+    const currentVal = gameState.cash + annualRev * baseMult;
+    if (oldVal > 0) {
+      const growthRate = (currentVal - oldVal) / oldVal;
+      // Fast growth: up to 3× multiplier. Flat/decline: down to 0.5×
+      if (growthRate > 0.5) growthMod = 3.0;       // rocketship (>50% growth)
+      else if (growthRate > 0.2) growthMod = 2.0;   // strong growth
+      else if (growthRate > 0.05) growthMod = 1.5;  // healthy growth
+      else if (growthRate > 0.01) growthMod = 1.2;  // modest growth
+      else if (growthRate > -0.05) growthMod = 1.0;  // flat
+      else if (growthRate > -0.2) growthMod = 0.7;   // declining
+      else growthMod = 0.5;                          // in freefall
+    }
+  }
+
+  // Market noise — small random factor (±5%) so line isn't perfectly smooth
+  const noise = 0.95 + Math.random() * 0.10;
+
+  // Subtract tax debt from valuation (liabilities)
+  let taxLiabilities = 0;
+  if (gameState.taxDebts) {
+    for (const debt of gameState.taxDebts) {
+      if (!debt.settled) taxLiabilities += debt.current;
+    }
+  }
+
+  const revMultiple = baseMult * growthMod * noise;
+  return Math.max(0, gameState.cash + annualRev * revMultiple - taxLiabilities);
 }
 
 function sampleValuation() {
