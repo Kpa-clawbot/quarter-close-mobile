@@ -1501,8 +1501,15 @@ function updateTaxPanel() {
     </div>`;
   }
 
-  panel.innerHTML = html;
-  buildFillerRows();
+  // Only update DOM every 3 ticks or when debt count changes
+  // Prevents innerHTML replacement from eating Settle button clicks
+  const debtKey = (gameState.taxDebts || []).map(d => d.current + d.stage).join(',');
+  const updateKey = debtKey + '|' + Math.floor(gameState.totalPlayTime / 3);
+  if (panel.dataset.lastKey !== updateKey) {
+    panel.innerHTML = html;
+    panel.dataset.lastKey = updateKey;
+    buildFillerRows();
+  }
 }
 
 // Debug: trigger quarterly tax
