@@ -1140,6 +1140,7 @@ body {
 #mini-task-bar {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 10px;
   padding: 4px 12px;
   background: #fffde7;
@@ -1148,7 +1149,6 @@ body {
 }
 
 #mini-task-text {
-  flex: 1;
   color: #333;
 }
 
