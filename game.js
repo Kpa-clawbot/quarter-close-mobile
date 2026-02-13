@@ -897,12 +897,10 @@ function updateTaxPanel() {
   const panel = document.getElementById('tax-panel');
   if (!gameState.taxDebts || gameState.taxDebts.length === 0) {
     panel.classList.add('hidden');
+    panel.innerHTML = '';
     return;
   }
   panel.classList.remove('hidden');
-
-  const tbody = document.getElementById('tax-rows');
-  tbody.innerHTML = '';
 
   const stageLabels = {
     notice1: '1st Notice',
@@ -911,6 +909,36 @@ function updateTaxPanel() {
     seizure: '🚨 Seizure',
   };
 
+  // Figure out row numbering (continue from filler rows)
+  const fillerCount = document.querySelectorAll('.filler-row').length;
+  const sourceCount = SOURCE_STATS.length;
+  let rowNum = sourceCount + 4 + fillerCount;
+
+  let html = '';
+
+  // Separator
+  html += `<div class="grid-row sep-row">
+    <div class="row-num">${rowNum++}</div>
+    <div class="cell cell-a sep-cell"></div><div class="cell cell-b sep-cell"></div>
+    <div class="cell cell-c sep-cell"></div><div class="cell cell-d sep-cell"></div>
+    <div class="cell cell-e sep-cell"></div><div class="cell cell-f sep-cell"></div>
+    <div class="cell cell-g sep-cell"></div><div class="cell cell-h sep-cell"></div>
+  </div>`;
+
+  // Header row
+  html += `<div class="grid-row tax-grid-header">
+    <div class="row-num">${rowNum++}</div>
+    <div class="cell cell-a" style="font-weight:600;color:#900">TAX LIABILITY</div>
+    <div class="cell cell-b" style="font-weight:600;color:#666;font-size:10px">Original</div>
+    <div class="cell cell-c" style="font-weight:600;color:#666;font-size:10px;justify-content:flex-end">Interest</div>
+    <div class="cell cell-d" style="font-weight:600;color:#666;font-size:10px;justify-content:flex-end">Total Due</div>
+    <div class="cell cell-e" style="font-weight:600;color:#666;font-size:10px">Age</div>
+    <div class="cell cell-f" style="font-weight:600;color:#666;font-size:10px">Status</div>
+    <div class="cell cell-g" style="font-weight:600;color:#666;font-size:10px">Next</div>
+    <div class="cell cell-h"></div>
+  </div>`;
+
+  // Debt rows
   for (let i = 0; i < gameState.taxDebts.length; i++) {
     const d = gameState.taxDebts[i];
     const interest = d.current - d.original;
@@ -918,25 +946,39 @@ function updateTaxPanel() {
                        d.stage === 'notice2' ? (90 - d.daysOverdue) :
                        d.stage === 'garnish' ? (180 - d.daysOverdue) : 0;
     const nextLabel = d.stage === 'notice1' ? '2nd Notice' :
-                      d.stage === 'notice2' ? 'Garnishment' :
+                      d.stage === 'notice2' ? 'Garnish' :
                       d.stage === 'garnish' ? 'Seizure' : '—';
+    const nextText = daysToNext > 0 ? `${nextLabel} ${daysToNext}d` : '—';
 
-    tbody.innerHTML += `
-      <div class="tax-row">
-        <span class="tax-cell tax-orig">${formatMoney(d.original)}</span>
-        <span class="tax-cell tax-interest">${formatMoney(interest)}</span>
-        <span class="tax-cell tax-total">${formatMoney(d.current)}</span>
-        <span class="tax-cell tax-days">${d.daysOverdue}d</span>
-        <span class="tax-cell tax-stage">${stageLabels[d.stage]}</span>
-        <span class="tax-cell tax-next">${daysToNext > 0 ? nextLabel + ' in ' + daysToNext + 'd' : '—'}</span>
-        <span class="tax-cell tax-action"><button class="cell-btn btn-max" onclick="settleTaxDebt(${i})">Settle</button></span>
-      </div>`;
+    html += `<div class="grid-row tax-debt-row">
+      <div class="row-num">${rowNum++}</div>
+      <div class="cell cell-a" style="color:#900">Assessment #${i + 1}</div>
+      <div class="cell cell-b" style="font-family:Consolas,monospace;font-size:11px;color:#c00">${formatMoney(d.original)}</div>
+      <div class="cell cell-c" style="font-family:Consolas,monospace;font-size:11px;color:#c00;justify-content:flex-end">${formatMoney(interest)}</div>
+      <div class="cell cell-d" style="font-family:Consolas,monospace;font-size:11px;color:#c00;font-weight:700;justify-content:flex-end">${formatMoney(d.current)}</div>
+      <div class="cell cell-e" style="color:#888;font-size:11px">${d.daysOverdue}d</div>
+      <div class="cell cell-f" style="font-size:10px">${stageLabels[d.stage]}</div>
+      <div class="cell cell-g" style="font-size:10px;color:#888">${nextText}</div>
+      <div class="cell cell-h"><button class="cell-btn btn-max" onclick="settleTaxDebt(${i})">Settle</button></div>
+    </div>`;
   }
 
+  // Total row
   const total = totalTaxOwed();
-  document.getElementById('tax-total').textContent = formatMoney(total);
-  const settleAllBtn = document.getElementById('tax-settle-all');
-  settleAllBtn.style.display = gameState.taxDebts.length > 1 ? '' : 'none';
+  const settleAllVis = gameState.taxDebts.length > 1 ? '' : 'display:none';
+  html += `<div class="grid-row tax-total-row">
+    <div class="row-num">${rowNum++}</div>
+    <div class="cell cell-a" style="font-weight:700;color:#900">TOTAL OWED</div>
+    <div class="cell cell-b"></div>
+    <div class="cell cell-c"></div>
+    <div class="cell cell-d" style="font-family:Consolas,monospace;font-size:12px;color:#c00;font-weight:700;justify-content:flex-end">${formatMoney(total)}</div>
+    <div class="cell cell-e"></div>
+    <div class="cell cell-f"></div>
+    <div class="cell cell-g"></div>
+    <div class="cell cell-h"><button class="cell-btn btn-max" onclick="settleAllTax()" style="${settleAllVis}">Settle All</button></div>
+  </div>`;
+
+  panel.innerHTML = html;
 }
 
 // Debug: trigger IRS event

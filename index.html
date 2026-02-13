@@ -171,25 +171,8 @@
       <!-- Empty filler rows to look like real spreadsheet -->
       <div id="filler-rows"></div>
 
-      <!-- Tax Liability Panel -->
-      <div id="tax-panel" class="hidden">
-        <div class="tax-header-row">
-          <span class="tax-cell tax-section-label">TAX LIABILITY</span>
-          <span class="tax-cell tax-orig-h">Original</span>
-          <span class="tax-cell tax-interest-h">Interest</span>
-          <span class="tax-cell tax-total-h">Total Due</span>
-          <span class="tax-cell tax-days-h">Age</span>
-          <span class="tax-cell tax-stage-h">Status</span>
-          <span class="tax-cell tax-next-h">Next Action</span>
-          <span class="tax-cell tax-action-h"></span>
-        </div>
-        <div id="tax-rows"></div>
-        <div class="tax-footer-row">
-          <span class="tax-cell tax-footer-label">TOTAL OWED:</span>
-          <span class="tax-cell tax-footer-val" id="tax-total">$0</span>
-          <button class="cell-btn btn-max" id="tax-settle-all" onclick="settleAllTax()">Settle All</button>
-        </div>
-      </div>
+      <!-- Tax rows rendered as grid rows by JS -->
+      <div id="tax-panel" class="hidden"></div>
     </div>
 
     <!-- Revenue Breakdown -->

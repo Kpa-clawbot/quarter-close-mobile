@@ -677,78 +677,22 @@ body {
 /* ============================================
    Sheet Tabs
    ============================================ */
-/* Tax Liability Panel */
-#tax-panel {
-  border-top: 2px solid #c00;
-  background: #fff8f8;
-  padding: 4px 0;
-  margin-top: 2px;
+/* Tax rows (rendered as grid rows) */
+.tax-grid-header {
+  background: #fff5f5 !important;
 }
 
-.tax-header-row, .tax-row, .tax-footer-row {
-  display: grid;
-  grid-template-columns: 120px 90px 80px 90px 50px 110px 120px 60px;
-  padding: 2px 6px 2px 36px;
-  align-items: center;
-  font-size: 11px;
+.tax-debt-row {
+  background: #fffafa !important;
 }
 
-.tax-header-row {
-  font-weight: 600;
-  color: #666;
-  text-transform: uppercase;
-  font-size: 10px;
-  letter-spacing: 0.3px;
-  border-bottom: 1px solid #e0d0d0;
+.tax-debt-row:hover {
+  background: #fff0f0 !important;
 }
 
-.tax-row {
-  border-bottom: 1px solid #f0e0e0;
-}
-
-.tax-row:hover {
-  background: #fff0f0;
-}
-
-.tax-cell {
-  padding: 2px 4px;
-  white-space: nowrap;
-}
-
-.tax-orig, .tax-interest, .tax-total, .tax-footer-val {
-  font-family: 'Consolas', 'Courier New', monospace;
-  color: #c00;
-}
-
-.tax-total {
-  font-weight: 700;
-}
-
-.tax-days {
-  color: #888;
-  text-align: center;
-}
-
-.tax-stage {
-  font-size: 10px;
-}
-
-.tax-footer-row {
-  border-top: 1px solid #c00;
-  margin-top: 2px;
-  padding-top: 4px;
-  font-weight: 600;
-}
-
-.tax-footer-label {
-  color: #900;
-  font-size: 10px;
-  text-transform: uppercase;
-}
-
-.tax-footer-val {
-  font-size: 12px;
-  font-weight: 700;
+.tax-total-row {
+  background: #fff5f5 !important;
+  border-top: 2px solid #dcc !important;
 }
 
 /* Revenue Breakdown Bar */
