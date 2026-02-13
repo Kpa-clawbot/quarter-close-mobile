@@ -295,6 +295,7 @@ let gameState = {
   totalSpentAuto: 0,
   lastQuarterDay: 0,      // game-day of last quarter close
   capitalExpenses: [],     // {amount, dayCreated, quartersLeft} — depreciate over 4 quarters
+  valuationHistory: [],    // array of {day, val} for chart — sampled every ~5 ticks
 };
 
 let gridBuilt = false;
@@ -496,11 +497,13 @@ function selectArc(arcKey) {
   gameState.totalSpentAuto = 0;
   gameState.lastQuarterDay = 0;
   gameState.capitalExpenses = [];
+  gameState.valuationHistory = [];
 
   // Clear stale panels
   const taxPanel = document.getElementById('tax-panel');
   taxPanel.innerHTML = '';
   taxPanel.classList.add('hidden');
+  document.getElementById('valuation-chart-container').classList.add('hidden');
 
   document.getElementById('arc-select').classList.add('hidden');
   document.getElementById('game-view').classList.remove('hidden');
@@ -1586,6 +1589,10 @@ function gameTick() {
     showSeriesA();
   }
 
+  // Valuation chart
+  sampleValuation();
+  drawValuationChart();
+
   updateGridValues();
   updateDisplay();
 }
@@ -1738,6 +1745,7 @@ function saveGame() {
     totalSpentAuto: gameState.totalSpentAuto,
     lastQuarterDay: gameState.lastQuarterDay,
     capitalExpenses: gameState.capitalExpenses || [],
+    valuationHistory: gameState.valuationHistory || [],
     savedAt: Date.now(),
   };
 
@@ -1785,6 +1793,7 @@ function loadGame() {
     gameState.totalSpentAuto = data.totalSpentAuto || 0;
     gameState.lastQuarterDay = data.lastQuarterDay || 0;
     gameState.capitalExpenses = (data.capitalExpenses || []).filter(c => c && c.quartersLeft > 0 && c.perQuarter > 0);
+    gameState.valuationHistory = data.valuationHistory || [];
 
     // Rebuild sources for selected arc
     gameState.sources = SOURCE_STATS.map((s, i) => ({
@@ -1866,6 +1875,7 @@ function resetGame() {
   gameState.totalSpentAuto = 0;
   gameState.lastQuarterDay = 0;
   gameState.capitalExpenses = [];
+  gameState.valuationHistory = [];
   gameState.eventCooldown = 0;
   gameState.miniTaskCooldown = 0;
   gameState.miniTaskActive = false;
@@ -2065,6 +2075,124 @@ function init() {
 }
 
 // Expose for inline onclick
+// ===== VALUATION CHART =====
+const MAX_VALUATION_POINTS = 200;
+let valuationTickCounter = 0;
+
+function getCompanyValuation() {
+  // Valuation = cash + annual revenue × revenue multiple
+  // Revenue multiple scales with company size (early: 5×, late: 15×)
+  const annualRev = totalRevPerTick() * 365.25;
+  const revMultiple = annualRev > 1e9 ? 15 : annualRev > 1e8 ? 12 : annualRev > 1e7 ? 10 : annualRev > 1e6 ? 8 : 5;
+  return gameState.cash + annualRev * revMultiple;
+}
+
+function sampleValuation() {
+  valuationTickCounter++;
+  if (valuationTickCounter < 5) return; // sample every 5 ticks
+  valuationTickCounter = 0;
+
+  const day = Math.floor(gameState.gameElapsedSecs / SECS_PER_DAY);
+  const val = getCompanyValuation();
+  if (!gameState.valuationHistory) gameState.valuationHistory = [];
+  gameState.valuationHistory.push({ day, val });
+
+  // Cap history length
+  if (gameState.valuationHistory.length > MAX_VALUATION_POINTS) {
+    gameState.valuationHistory = gameState.valuationHistory.slice(-MAX_VALUATION_POINTS);
+  }
+}
+
+function drawValuationChart() {
+  const container = document.getElementById('valuation-chart-container');
+  const hist = gameState.valuationHistory;
+  if (!hist || hist.length < 2) {
+    container.classList.add('hidden');
+    return;
+  }
+  container.classList.remove('hidden');
+
+  const canvas = document.getElementById('valuation-chart');
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width;
+  const H = canvas.height;
+
+  ctx.clearRect(0, 0, W, H);
+
+  // Chart area (leave room for axes)
+  const padL = 65, padR = 10, padT = 5, padB = 20;
+  const cW = W - padL - padR;
+  const cH = H - padT - padB;
+
+  const vals = hist.map(h => h.val);
+  const minVal = Math.min(...vals) * 0.95;
+  const maxVal = Math.max(...vals) * 1.05;
+  const range = maxVal - minVal || 1;
+
+  // Gridlines (5 horizontal)
+  ctx.strokeStyle = '#e0e0e0';
+  ctx.lineWidth = 1;
+  ctx.font = '9px Calibri, Segoe UI, sans-serif';
+  ctx.fillStyle = '#888';
+  ctx.textAlign = 'right';
+  for (let i = 0; i <= 4; i++) {
+    const y = padT + (cH * i / 4);
+    const val = maxVal - (range * i / 4);
+    ctx.beginPath();
+    ctx.moveTo(padL, Math.round(y) + 0.5);
+    ctx.lineTo(W - padR, Math.round(y) + 0.5);
+    ctx.stroke();
+    ctx.fillText(formatCompact(val), padL - 4, y + 3);
+  }
+
+  // X axis labels (first and last day)
+  ctx.textAlign = 'center';
+  ctx.fillStyle = '#888';
+  ctx.fillText('Day ' + hist[0].day, padL, H - 2);
+  ctx.fillText('Day ' + hist[hist.length - 1].day, W - padR, H - 2);
+
+  // Data line
+  ctx.beginPath();
+  ctx.strokeStyle = '#4472C4'; // Excel blue
+  ctx.lineWidth = 2;
+  ctx.lineJoin = 'round';
+
+  for (let i = 0; i < hist.length; i++) {
+    const x = padL + (i / (hist.length - 1)) * cW;
+    const y = padT + cH - ((hist[i].val - minVal) / range) * cH;
+    if (i === 0) ctx.moveTo(x, y);
+    else ctx.lineTo(x, y);
+  }
+  ctx.stroke();
+
+  // Fill under line (subtle gradient)
+  const lastX = padL + cW;
+  const lastY = padT + cH - ((hist[hist.length - 1].val - minVal) / range) * cH;
+  ctx.lineTo(lastX, padT + cH);
+  ctx.lineTo(padL, padT + cH);
+  ctx.closePath();
+  const grad = ctx.createLinearGradient(0, padT, 0, padT + cH);
+  grad.addColorStop(0, 'rgba(68, 114, 196, 0.15)');
+  grad.addColorStop(1, 'rgba(68, 114, 196, 0.02)');
+  ctx.fillStyle = grad;
+  ctx.fill();
+
+  // Current valuation label (top right)
+  const current = vals[vals.length - 1];
+  ctx.fillStyle = '#217346';
+  ctx.font = 'bold 11px Calibri, Segoe UI, sans-serif';
+  ctx.textAlign = 'right';
+  ctx.fillText(formatMoney(current), W - padR, padT + 12);
+}
+
+function formatCompact(n) {
+  if (n >= 1e12) return '$' + (n / 1e12).toFixed(1) + 'T';
+  if (n >= 1e9) return '$' + (n / 1e9).toFixed(1) + 'B';
+  if (n >= 1e6) return '$' + (n / 1e6).toFixed(1) + 'M';
+  if (n >= 1e3) return '$' + (n / 1e3).toFixed(1) + 'K';
+  return '$' + Math.floor(n);
+}
+
 window.unlockSource = unlockSource;
 window.hireEmployee = hireEmployee;
 window.upgradeSource = upgradeSource;
