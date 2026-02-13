@@ -439,7 +439,7 @@ body {
    ============================================ */
 #col-headers {
   display: grid;
-  grid-template-columns: 40px 200px 55px 80px 180px 190px 120px 80px 1fr;
+  grid-template-columns: 40px auto auto auto auto auto auto auto 1fr;
   background: #f0f0f0;
   border-bottom: 1px solid #c0c0c0;
   height: 22px;
@@ -477,7 +477,7 @@ body {
 /* Grid Rows */
 .grid-row {
   display: grid;
-  grid-template-columns: 40px 200px 55px 80px 180px 190px 120px 80px 1fr;
+  grid-template-columns: 40px auto auto auto auto auto auto auto 1fr;
   border-bottom: 1px solid #e8e8e8;
   min-height: 28px;
   align-items: center;
@@ -516,8 +516,6 @@ body {
   display: flex;
   align-items: center;
   white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 
 .cell-a { color: #212121; }
@@ -752,7 +750,7 @@ body {
 /* Filler rows */
 .filler-row {
   display: grid;
-  grid-template-columns: 40px 200px 55px 80px 180px 190px 120px 80px 1fr;
+  grid-template-columns: 40px auto auto auto auto auto auto auto 1fr;
   border-bottom: 1px solid #f0f0f0;
   min-height: 24px;
 }
