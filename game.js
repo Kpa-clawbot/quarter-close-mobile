@@ -117,12 +117,15 @@ const MINI_TASKS = [
 ];
 
 function miniTaskReward(task) {
+  const streakMult = gameState.miniTaskStreak >= 10 ? 3 :
+                     gameState.miniTaskStreak >= 5 ? 2 :
+                     gameState.miniTaskStreak >= 3 ? 1.5 : 1;
   // Use annual rev / 365.25 to get base daily rate, unaffected by penalties/outages
   const dailyRev = totalAnnualRev() / 365.25;
   const low = task.rewardMult[0];
   const high = task.rewardMult[1];
   const mult = low + Math.random() * (high - low);
-  return Math.max(1, dailyRev * mult);
+  return Math.max(1, Math.floor(dailyRev * mult * streakMult));
 }
 
 // ===== EVENTS DEFINITIONS =====
@@ -276,6 +279,7 @@ let gameState = {
   totalPlayTime: 0,
   miniTaskCooldown: 0,
   miniTaskActive: false,
+  miniTaskStreak: 0,
   totalClicks: 0,
   gameStartDate: Date.UTC(2024, 0, 1),  // Jan 1, 2024
   gameElapsedSecs: 0,
@@ -456,6 +460,7 @@ function selectArc(arcKey) {
   gameState.eventCooldown = 30;
   gameState.miniTaskCooldown = 10;
   gameState.miniTaskActive = false;
+  gameState.miniTaskStreak = 0;
   gameState.gameStartDate = Date.UTC(2024, 0, 1);
   gameState.gameElapsedSecs = 0;
   gameState.revPenalty = null;
@@ -530,8 +535,9 @@ function showMiniTask(text, reward, tier) {
   gameState.miniTaskActive = true;
   const bar = document.getElementById('mini-task-bar');
   const tierLabels = { low: '📋', mid: '📊', high: '💼' };
+  const streakLabel = gameState.miniTaskStreak >= 3 ? ` 🔥${gameState.miniTaskStreak}` : '';
   document.getElementById('mini-task-text').textContent = (tierLabels[tier] || '') + ' ' + text;
-  document.getElementById('mini-task-reward').textContent = `+${formatMoney(reward)}`;
+  document.getElementById('mini-task-reward').textContent = `+${formatMoney(reward)}${streakLabel}`;
   bar.dataset.reward = reward;
   bar.classList.remove('hidden');
 }
@@ -543,12 +549,17 @@ function completeMiniTask() {
   gameState.totalEarned += reward;
   gameState.quarterRevenue += reward;
   gameState.totalClicks++;
+  gameState.miniTaskStreak++;
   bar.classList.add('hidden');
   gameState.miniTaskActive = false;
   gameState.miniTaskCooldown = 15 + Math.floor(Math.random() * 15); // 15-30s cooldown
 
-  // Flash feedback
-  document.getElementById('status-text').textContent = `✅ Task done! +${formatMoney(reward)}`;
+  // Streak feedback
+  const streakMsg = gameState.miniTaskStreak >= 10 ? ` 🔥🔥🔥 ${gameState.miniTaskStreak} streak! (3×)` :
+                    gameState.miniTaskStreak >= 5 ? ` 🔥🔥 ${gameState.miniTaskStreak} streak! (2×)` :
+                    gameState.miniTaskStreak >= 3 ? ` 🔥 ${gameState.miniTaskStreak} streak! (1.5×)` :
+                    gameState.miniTaskStreak > 1 ? ` (${gameState.miniTaskStreak} in a row)` : '';
+  document.getElementById('status-text').textContent = `✅ Task done! +${formatMoney(reward)}${streakMsg}`;
   setTimeout(() => { document.getElementById('status-text').textContent = 'Ready'; }, 2000);
 
   flashCash();
@@ -560,6 +571,11 @@ function skipMiniTask() {
   bar.classList.add('hidden');
   gameState.miniTaskActive = false;
   gameState.miniTaskCooldown = 10;
+  if (gameState.miniTaskStreak > 0) {
+    document.getElementById('status-text').textContent = `💔 Streak lost! (was ${gameState.miniTaskStreak})`;
+    setTimeout(() => { document.getElementById('status-text').textContent = 'Ready'; }, 2000);
+  }
+  gameState.miniTaskStreak = 0;
 }
 
 // ===== TIME SCALE CHANGE NOTIFICATION =====
@@ -1525,6 +1541,7 @@ function saveGame() {
     seriesAShown: gameState.seriesAShown,
     totalPlayTime: gameState.totalPlayTime,
     totalClicks: gameState.totalClicks,
+    miniTaskStreak: gameState.miniTaskStreak,
     gameStartDate: gameState.gameStartDate,
     gameElapsedSecs: gameState.gameElapsedSecs,
     taxDebts: gameState.taxDebts || [],
@@ -1569,6 +1586,7 @@ function loadGame() {
     gameState.seriesAShown = data.seriesAShown || false;
     gameState.totalPlayTime = data.totalPlayTime || 0;
     gameState.totalClicks = data.totalClicks || 0;
+    gameState.miniTaskStreak = data.miniTaskStreak || 0;
     gameState.gameStartDate = data.gameStartDate || Date.UTC(2024, 0, 1);
     gameState.gameElapsedSecs = data.gameElapsedSecs || 0;
     gameState.eventCooldown = 30;
@@ -1667,6 +1685,7 @@ function resetGame() {
   gameState.eventCooldown = 0;
   gameState.miniTaskCooldown = 0;
   gameState.miniTaskActive = false;
+  gameState.miniTaskStreak = 0;
   showArcSelect();
 }
 
