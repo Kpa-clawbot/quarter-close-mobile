@@ -114,25 +114,38 @@ function totalRealRevPerSec() {
 }
 
 // ===== MINI-TASK DEFINITIONS =====
+// Rewards scale: multiplier × current per-tick revenue (min $1)
 const MINI_TASKS = [
-  { text: 'Approve Invoice #{{num}}?', reward: [5, 10], type: 'approve' },
-  { text: 'Sign contract for Client #{{num}}', reward: [8, 15], type: 'approve' },
-  { text: 'Review expense report (${{num}})', reward: [5, 8], type: 'approve' },
-  { text: 'Authorize PO #{{num}}', reward: [6, 12], type: 'approve' },
-  { text: 'Confirm delivery #{{num}}', reward: [4, 8], type: 'approve' },
-  { text: 'Reply to vendor inquiry', reward: [3, 7], type: 'approve' },
-  { text: 'Process refund #{{num}}', reward: [5, 10], type: 'approve' },
-  { text: 'Approve time sheet for Week {{num}}', reward: [4, 9], type: 'approve' },
+  { text: 'Approve Invoice #{{num}}?', rewardMult: [3, 6], type: 'approve' },
+  { text: 'Sign contract for Client #{{num}}', rewardMult: [5, 10], type: 'approve' },
+  { text: 'Review expense report (${{num}})', rewardMult: [3, 5], type: 'approve' },
+  { text: 'Authorize PO #{{num}}', rewardMult: [4, 8], type: 'approve' },
+  { text: 'Confirm delivery #{{num}}', rewardMult: [2, 5], type: 'approve' },
+  { text: 'Reply to vendor inquiry', rewardMult: [2, 4], type: 'approve' },
+  { text: 'Process refund #{{num}}', rewardMult: [3, 6], type: 'approve' },
+  { text: 'Approve time sheet for Week {{num}}', rewardMult: [2, 5], type: 'approve' },
 ];
+
+function miniTaskReward(task) {
+  const perTick = totalRevPerTick();
+  const low = task.rewardMult[0];
+  const high = task.rewardMult[1];
+  const mult = low + Math.random() * (high - low);
+  return Math.max(1, perTick * mult);
+}
 
 // ===== EVENTS DEFINITIONS =====
 const EVENTS = [
   {
     sender: 'Mom',
     subject: 'Quick investment opportunity',
-    body: 'Honey, I believe in your little business! I want to invest $50. No strings attached!',
+    body: 'Honey, I believe in your little business! Here\'s a little something to help out.',
     actions: [
-      { label: 'Accept (+$50)', effect: (gs) => { gs.cash += 50; return 'Mom invested $50!'; } },
+      { label: 'Accept (+5% cash)', effect: (gs) => {
+        const gift = Math.max(10, Math.floor(gs.cash * 0.05));
+        gs.cash += gift;
+        return `Mom invested ${formatMoney(gift)}! Thanks, Mom.`;
+      }},
       { label: 'Decline (no effect)', effect: () => 'You declined. Mom is mildly hurt.' },
     ]
   },
@@ -141,9 +154,10 @@ const EVENTS = [
     subject: 'RE: TERRIBLE SERVICE!!!',
     body: 'I want a FULL REFUND or I\'m leaving a 1-star review everywhere!',
     actions: [
-      { label: 'Refund them (-$20)', effect: (gs) => {
-        if (gs.cash >= 20) { gs.cash -= 20; return 'Complaint resolved. Crisis averted.'; }
-        return 'You don\'t have $20! Customer left a bad review.';
+      { label: 'Refund (-2% cash)', effect: (gs) => {
+        const refund = Math.max(5, Math.floor(gs.cash * 0.02));
+        gs.cash -= refund;
+        return `Refunded ${formatMoney(refund)}. Complaint resolved.`;
       }},
       { label: 'Ignore (rev -10% for 60s)', effect: (gs) => {
         gs.revPenalty = { mult: 0.9, until: Date.now() + 60000 };
@@ -159,7 +173,7 @@ const EVENTS = [
       { label: 'Pay taxes (-10% cash)', effect: (gs) => {
         const tax = Math.floor(gs.cash * 0.1);
         gs.cash -= tax;
-        return `Paid $${formatNum(tax)} in taxes. Uncle Sam thanks you.`;
+        return `Paid ${formatMoney(tax)} in taxes. Uncle Sam thanks you.`;
       }},
     ]
   },
@@ -168,7 +182,10 @@ const EVENTS = [
     subject: 'Hey can I get a discount??',
     body: 'Bro remember me from college?? Hook me up with a discount! For old times\' sake 🤙',
     actions: [
-      { label: 'Give discount (+morale)', effect: () => 'Your friend is happy! Team morale +vibes.' },
+      { label: 'Give discount (+5% rev for 30s)', effect: (gs) => {
+        gs.revBonus = { mult: 1.05, until: Date.now() + 30000 };
+        return 'Your friend told everyone! Word of mouth +5% revenue for 30s.';
+      }},
       { label: 'Full price (no effect)', effect: () => 'They understand. Business is business.' },
     ]
   },
@@ -193,6 +210,7 @@ let gameState = {
   totalEarned: 0,
   sources: [],
   revPenalty: null,
+  revBonus: null,
   powerOutage: null,
   seriesAShown: false,
   lastSave: Date.now(),
@@ -259,6 +277,11 @@ function totalRevPerTick() {
     total *= gameState.revPenalty.mult;
   } else {
     gameState.revPenalty = null;
+  }
+  if (gameState.revBonus && Date.now() < gameState.revBonus.until) {
+    total *= gameState.revBonus.mult;
+  } else {
+    gameState.revBonus = null;
   }
   if (gameState.powerOutage && Date.now() < gameState.powerOutage.until) {
     total = 0;
@@ -387,7 +410,7 @@ function trySpawnMiniTask() {
 
   const task = MINI_TASKS[Math.floor(Math.random() * MINI_TASKS.length)];
   const num = Math.floor(Math.random() * 9000) + 1000;
-  const reward = task.reward[0] + Math.floor(Math.random() * (task.reward[1] - task.reward[0] + 1));
+  const reward = miniTaskReward(task);
   const text = task.text.replace('{{num}}', num);
 
   showMiniTask(text, reward);
