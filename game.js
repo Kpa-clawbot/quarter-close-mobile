@@ -878,8 +878,15 @@ function updateDisplay() {
 
   const activeCount = gameState.sources.filter(s => s.unlocked).length;
   const lastRow = activeCount + 3;
-  document.getElementById('formula-input').textContent = `=SUM(C4:C${lastRow})`;
-  document.getElementById('cell-ref').textContent = 'C2';
+  // Only show default formula if no cell is manually selected
+  if (!document.querySelector('.cell.selected-cell')) {
+    document.getElementById('formula-input').textContent = `=SUM(C4:C${lastRow})`;
+    document.getElementById('cell-ref').textContent = 'C2';
+  } else {
+    // Refresh selected cell content (values change each tick)
+    const sel = document.querySelector('.cell.selected-cell');
+    document.getElementById('formula-input').textContent = sel.textContent.trim() || '';
+  }
 
   if (gameState.powerOutage && Date.now() < gameState.powerOutage.until) {
     const secsLeft = Math.ceil((gameState.powerOutage.until - Date.now()) / 1000);
