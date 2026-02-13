@@ -1279,12 +1279,18 @@ function gameTick() {
 
     for (const state of gameState.sources) {
       if (!state.unlocked || state.employees === 0) continue;
-      const rev = sourceRevPerTick(state) * penaltyMult;
+      const fullRev = sourceRevPerTick(state);
+      const rev = fullRev * penaltyMult;
+      const garnished = garnishActive ? Math.floor(fullRev * 0.15) : 0;
 
       if (state.automated) {
         gameState.cash += rev;
         gameState.totalEarned += rev;
         gameState.quarterRevenue += rev;
+        if (garnished > 0) {
+          gameState.quarterTaxPaid += garnished;
+          gameState.totalTaxPaid += garnished;
+        }
       } else {
         state.pendingCollect += rev;
       }
