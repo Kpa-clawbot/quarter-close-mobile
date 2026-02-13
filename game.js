@@ -181,6 +181,52 @@ const EVENTS = [
     },
     actions: []
   },
+  {
+    sender: 'Google Alerts',
+    subject: '📈 Your company is trending on TikTok!',
+    body: 'A customer posted a viral video about your product. 2.3M views and counting! Revenue is spiking.',
+    actions: [
+      { label: 'Ride the wave! (3× rev, 30s)', effect: (gs) => {
+        gs.revBonus = { mult: 3, until: Date.now() + 30000 };
+        return '🔥 TikTok viral! Revenue ×3 for 30 seconds!';
+      }},
+    ]
+  },
+  {
+    sender: 'PR Team',
+    subject: 'Forbes wants to feature us! 🎉',
+    body: 'Forbes is running a "30 Under 30" style piece and wants to include us. This will be huge for brand awareness.',
+    actions: [
+      { label: 'Do the interview (2× rev, 60s)', effect: (gs) => {
+        gs.revBonus = { mult: 2, until: Date.now() + 60000 };
+        return '📰 Forbes feature live! Revenue ×2 for 60 seconds!';
+      }},
+      { label: 'Too busy', effect: () => 'You passed on free press. Bold move.' },
+    ]
+  },
+  {
+    sender: 'Social Media',
+    subject: '🚀 We hit the front page of Reddit!',
+    body: 'Someone posted about us on r/technology and it exploded. Server traffic is through the roof!',
+    actions: [
+      { label: 'Scale the servers! (5× rev, 15s)', effect: (gs) => {
+        gs.revBonus = { mult: 5, until: Date.now() + 15000 };
+        return '🚀 Reddit front page! Revenue ×5 for 15 seconds!';
+      }},
+    ]
+  },
+  {
+    sender: 'Marketing',
+    subject: '📺 Local news wants to do a segment on us',
+    body: 'Channel 7 heard about us and wants to do a feel-good local business story. Free advertising!',
+    actions: [
+      { label: 'Schedule the shoot (2× rev, 45s)', effect: (gs) => {
+        gs.revBonus = { mult: 2, until: Date.now() + 45000 };
+        return '📺 Local news feature! Revenue ×2 for 45 seconds!';
+      }},
+      { label: 'Camera shy', effect: () => 'Missed opportunity for free press.' },
+    ]
+  },
 ];
 
 // ===== GAME STATE =====
@@ -714,6 +760,9 @@ function updateDisplay() {
     const hireFroze = gameState.hireFrozen && Date.now() < gameState.hireFrozen;
     const hireMsg = hireFroze ? ' | Hiring frozen' : '';
     document.getElementById('status-text').textContent = `⚠ Revenue penalty — ${secsLeft}s remaining${hireMsg}`;
+  } else if (gameState.revBonus && Date.now() < gameState.revBonus.until) {
+    const secsLeft = Math.ceil((gameState.revBonus.until - Date.now()) / 1000);
+    document.getElementById('status-text').textContent = `🔥 Revenue ×${gameState.revBonus.mult} — ${secsLeft}s remaining`;
   } else if (gameState.hireFrozen && Date.now() < gameState.hireFrozen) {
     const secsLeft = Math.ceil((gameState.hireFrozen - Date.now()) / 1000);
     document.getElementById('status-text').textContent = `🚫 Hiring frozen — ${secsLeft}s remaining`;
