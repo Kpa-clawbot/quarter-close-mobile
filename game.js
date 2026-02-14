@@ -286,7 +286,7 @@ const BOARD_ROOM_UPGRADES = [
   {
     id: 'finance_dept_1',
     name: 'Finance Dept Lv1',
-    desc: 'Auto-handles earnings — no more popup. Uses conservative guidance.',
+    desc: 'Auto-handles earnings. Defaults to conservative guidance (0.5× RE).',
     cost: 500,
     requires: null,
     maxCount: 1,
@@ -295,7 +295,7 @@ const BOARD_ROOM_UPGRADES = [
   {
     id: 'finance_dept_2',
     name: 'Finance Dept Lv2',
-    desc: 'Smarter auto-earnings — uses in-line guidance.',
+    desc: 'Auto-earnings with in-line guidance (1× RE). Better returns.',
     cost: 2500,
     requires: 'finance_dept_1',
     maxCount: 1,
@@ -304,7 +304,7 @@ const BOARD_ROOM_UPGRADES = [
   {
     id: 'finance_dept_3',
     name: 'Finance Dept Lv3',
-    desc: 'Uses ambitious guidance, optimizes timing.',
+    desc: 'Auto-earnings with ambitious guidance (2× RE). Maximum yield.',
     cost: 10000,
     requires: 'finance_dept_2',
     maxCount: 1,
@@ -1781,14 +1781,24 @@ function updateTaxPanel() {
     </div>`;
 
     // Guidance row with buttons
+    const guidanceKeys = Object.keys(GUIDANCE_LEVELS);
+    const guidanceButtons = guidanceKeys.map(key => {
+      const lv = GUIDANCE_LEVELS[key];
+      const active = key === guidanceKey;
+      const style = active
+        ? 'font-weight:700;color:#0078d4;text-decoration:underline;cursor:pointer'
+        : 'color:#888;cursor:pointer;font-size:10px';
+      return `<span style="${style}" onclick="setGuidance('${key}')">${lv.emoji}${active ? ' ' + lv.label : ''}</span>`;
+    }).join(' ');
+
     html += `<div class="grid-row ir-row" id="ir-guidance-row">
       <div class="row-num">${rowNum++}</div>
       <div class="cell cell-a" style="padding-left:16px;color:#444">Guidance</div>
-      <div class="cell cell-b" style="font-weight:600;color:#333">${guidanceLevel.emoji} ${guidanceLevel.label}</div>
+      <div class="cell cell-b">${guidanceButtons}</div>
       <div class="cell cell-c" style="font-size:10px;color:#888;justify-content:flex-end">${guidanceLevel.reMult}× RE</div>
       <div class="cell cell-d" style="font-size:10px;color:#888">Target: ${formatCompact(gameState.guidanceTarget)}</div>
       <div class="cell cell-e"></div>
-      <div class="cell cell-f" style="font-size:10px;color:#999">Set at earnings</div>
+      <div class="cell cell-f"></div>
       <div class="cell cell-g"></div>
       <div class="cell cell-h"></div>
     </div>`;
@@ -2740,6 +2750,14 @@ function forceIPO() {
   setTimeout(() => { document.getElementById('status-text').textContent = 'Ready'; }, 3000);
 }
 
+function resetBoardRoom() {
+  gameState.boardRoomPurchases = {};
+  gameState.retainedEarnings = 0;
+  if (gameState.activeTab === 'boardroom') renderBoardRoom();
+  document.getElementById('status-text').textContent = '🧪 Board Room reset — all upgrades cleared, RE set to 0.';
+  setTimeout(() => { document.getElementById('status-text').textContent = 'Ready'; }, 3000);
+}
+
 function setGuidance(level) {
   if (!gameState.isPublic) return;
   gameState.currentGuidance = level;
@@ -2861,7 +2879,7 @@ function processEarnings() {
   // Finance Dept: auto-process earnings without modal
   const financeDeptLvl = getFinanceDeptLevel();
   if (financeDeptLvl > 0) {
-    // Auto-set guidance for next quarter based on Finance Dept level
+    // Auto-set guidance based on Finance Dept level (player can override via IR row)
     const autoGuidance = financeDeptLvl >= 3 ? 'ambitious' :
                          financeDeptLvl >= 2 ? 'in-line' : 'conservative';
     setGuidance(autoGuidance);
@@ -2923,6 +2941,7 @@ function trackEarningsRevenue(amount) {
 
 // Expose
 window.forceIPO = forceIPO;
+window.resetBoardRoom = resetBoardRoom;
 window.setGuidance = setGuidance;
 
 // ===== BOARD ROOM (Phase 2.2) =====
