@@ -1857,31 +1857,32 @@ function updateTaxPanel() {
     // CFO row (only if Finance Dept owned)
     const maxCFOLevel = getFinanceDeptLevel();
     if (maxCFOLevel > 0) {
-      const cfoNames = { 0: 'Manual', 1: '👶 Intern', 2: '📊 Competent', 3: '🎩 Elite' };
       const activeCFO = gameState.activeCFOLevel;
-      // Build level selector buttons
-      let cfoButtons = `<span style="cursor:pointer;${activeCFO === 0 ? 'font-weight:700;color:#0078d4;text-decoration:underline' : 'color:#888;font-size:10px'}" onclick="setActiveCFOLevel(0)">Manual</span>`;
+      // Build level selector as bracket-style buttons: [Manual] [👶1] [📊2] [🎩3]
+      const btnStyle = (active) => active
+        ? 'cursor:pointer;font-weight:700;color:#fff;background:#0078d4;padding:1px 6px;border-radius:2px;font-size:11px;margin-right:3px'
+        : 'cursor:pointer;color:#0078d4;border:1px solid #0078d4;padding:1px 5px;border-radius:2px;font-size:10px;margin-right:3px;background:transparent';
+      let cfoButtons = `<span style="${btnStyle(activeCFO === 0)}" onclick="setActiveCFOLevel(0)">Manual</span>`;
+      const labels = { 1: '👶 1', 2: '📊 2', 3: '🎩 3' };
       for (let lvl = 1; lvl <= maxCFOLevel; lvl++) {
-        const active = activeCFO === lvl;
-        const style = active
-          ? 'font-weight:700;color:#0078d4;text-decoration:underline;cursor:pointer'
-          : 'color:#888;cursor:pointer;font-size:10px';
-        const label = lvl === 1 ? '👶 Lv1' : lvl === 2 ? '📊 Lv2' : '🎩 Lv3';
-        cfoButtons += ` <span style="${style}" onclick="setActiveCFOLevel(${lvl})">${label}</span>`;
+        cfoButtons += `<span style="${btnStyle(activeCFO === lvl)}" onclick="setActiveCFOLevel(${lvl})">${labels[lvl]}</span>`;
       }
       // Record for active CFO
       const record = gameState.cfoRecords[activeCFO];
       const recordStr = activeCFO > 0 && record && record.total > 0
         ? `${record.beats}/${record.total} (${Math.round(record.beats / record.total * 100)}%)`
         : activeCFO > 0 ? 'No data' : '';
+      const recordColor = activeCFO > 0 && record && record.total > 0
+        ? (record.beats / record.total >= 0.7 ? '#217346' : record.beats / record.total >= 0.4 ? '#b8860b' : '#c00')
+        : '#333';
 
       html += `<div class="grid-row ir-row">
         <div class="row-num">${rowNum++}</div>
         <div class="cell cell-a" style="padding-left:16px;color:#444">Finance Dept</div>
-        <div class="cell cell-b">${cfoButtons}</div>
+        <div class="cell cell-b" style="display:flex;align-items:center">${cfoButtons}</div>
         <div class="cell cell-c"></div>
         <div class="cell cell-d" style="font-size:10px;color:#888">${activeCFO > 0 ? 'Record' : ''}</div>
-        <div class="cell cell-e" style="font-family:Consolas,monospace;font-size:11px;color:${activeCFO > 0 && record && record.total > 0 ? (record.beats / record.total >= 0.7 ? '#217346' : record.beats / record.total >= 0.4 ? '#b8860b' : '#c00') : '#333'}">${recordStr}</div>
+        <div class="cell cell-e" style="font-family:Consolas,monospace;font-size:11px;color:${recordColor}">${recordStr}</div>
         <div class="cell cell-f"></div>
         <div class="cell cell-g"></div>
         <div class="cell cell-h"></div>
