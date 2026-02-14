@@ -905,7 +905,11 @@ function trySpawnGoldenCell() {
   const rowIndex = pick.i;
 
   // Pick a random visible cell in that row (columns b through h)
-  const cols = ['cell-b', 'cell-c', 'cell-d', 'cell-e', 'cell-f', 'cell-g', 'cell-h'];
+  // On mobile (narrow screens), columns G and H are hidden — exclude them (#46)
+  let cols = ['cell-b', 'cell-c', 'cell-d', 'cell-e', 'cell-f', 'cell-g', 'cell-h'];
+  if (window.innerWidth <= 600) {
+    cols = ['cell-b', 'cell-c', 'cell-d', 'cell-e', 'cell-f'];
+  }
   const colClass = cols[Math.floor(Math.random() * cols.length)];
 
   // Find the grid row for this source

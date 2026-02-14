@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
@@ -20,7 +20,7 @@
   <meta name="description" content="An idle tycoon game disguised as a spreadsheet. Look busy. Get rich.">
   <title>Q4 Financials - Operations.xlsx - Quarter Close</title>
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='4' fill='%23217346'/><rect x='4' y='4' width='7' height='5' rx='1' fill='white'/><rect x='13' y='4' width='7' height='5' rx='1' fill='white'/><rect x='22' y='4' width='7' height='5' rx='1' fill='white'/><rect x='4' y='11' width='7' height='5' rx='1' fill='white' opacity='0.8'/><rect x='13' y='11' width='7' height='5' rx='1' fill='white' opacity='0.8'/><rect x='22' y='11' width='7' height='5' rx='1' fill='white' opacity='0.8'/><rect x='4' y='18' width='7' height='5' rx='1' fill='white' opacity='0.6'/><rect x='13' y='18' width='7' height='5' rx='1' fill='white' opacity='0.6'/><rect x='22' y='18' width='7' height='5' rx='1' fill='white' opacity='0.6'/><rect x='4' y='25' width='7' height='5' rx='1' fill='white' opacity='0.4'/><rect x='13' y='25' width='7' height='5' rx='1' fill='white' opacity='0.4'/><rect x='22' y='25' width='7' height='5' rx='1' fill='white' opacity='0.4'/></svg>">
-  <link rel="stylesheet" href="style.css?v=15">
+  <link rel="stylesheet" href="style.css?v=16">
 </head>
 <body>
   <!-- ===== ARC SELECTION ===== -->
@@ -46,7 +46,7 @@
         <span id="title-text">Q4 Financials - Operations.xlsx</span>
       </div>
       <div id="title-right">
-        <span class="title-btn">─</span>
+        <span class="title-btn mobile-boss-btn" onclick="toggleBossMode()" title="Boss key">─</span>
         <span class="title-btn">□</span>
         <span class="title-btn title-close">✕</span>
       </div>
@@ -251,7 +251,7 @@
         <span>Book1 - Excel</span>
       </div>
       <div id="boss-title-right">
-        <span class="title-btn">─</span>
+        <span class="title-btn mobile-boss-btn" onclick="toggleBossMode()" title="Return to game">─</span>
         <span class="title-btn">□</span>
         <span class="title-btn title-close">✕</span>
       </div>
@@ -427,7 +427,7 @@
     </div>
   </div>
 
-  <script src="game.js?v=15"></script>
+  <script src="game.js?v=16"></script>
   <script>
     if (location.hostname === 'kpa-clawbot.github.io') {
       var s = document.createElement('script');

@@ -2073,4 +2073,122 @@ body {
   #about-content {
     font-size: 14px;
   }
+
+  /* --- #41: Toast notifications responsive sizing --- */
+  #event-toast {
+    max-width: 90vw;
+    width: 90vw;
+  }
+
+  #toast-body {
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+  }
+
+  #toast-actions {
+    flex-wrap: wrap;
+  }
+
+  .toast-btn {
+    flex: 1 1 auto;
+    text-align: center;
+  }
+
+  /* --- #42: Mobile boss key button --- */
+  .mobile-boss-btn {
+    /* On desktop, this is just a normal minimize button */
+    /* On mobile, it triggers boss mode */
+  }
+
+  /* --- #43: Touch event support / eliminate 300ms tap delay --- */
+  *, *::before, *::after {
+    touch-action: manipulation;
+  }
+
+  /* --- #44: Formula bar wastes space on mobile --- */
+  #formula-bar {
+    display: none;
+  }
+
+  /* --- #45: Mini-task bar mobile-friendly layout --- */
+  #mini-task-bar {
+    max-width: 100%;
+    width: 100%;
+    padding: 8px 10px;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  #mini-task-text {
+    flex: 1 1 100%;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+  }
+
+  #mini-task-reward {
+    flex: 0 0 auto;
+  }
+
+  .mini-task-btn {
+    flex: 1 1 auto;
+    min-width: 80px;
+  }
+
+  .mini-task-skip {
+    flex: 0 0 auto;
+  }
+
+  /* --- #50: Status bar simplified for mobile --- */
+  #status-left .status-sep,
+  #status-timescale {
+    display: none;
+  }
+
+  #status-center {
+    display: none;
+  }
+
+  #status-clicks,
+  #status-zoom,
+  #stock-sep {
+    display: none;
+  }
+
+  /* Keep only game-date on left, time on right */
+  #status-left {
+    flex: 1;
+  }
+
+  #status-right {
+    flex: 0 0 auto;
+    gap: 4px;
+  }
+
+  /* --- #51: Modal dialogs max-width clamping --- */
+  #help-content {
+    max-width: 95vw;
+    max-height: 85vh;
+    overflow-y: auto;
+  }
+
+  .help-body {
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  #about-content {
+    max-width: 95vw;
+  }
+
+  #offline-content {
+    max-width: 95vw;
+  }
+
+  #series-a-content {
+    max-width: 95vw;
+  }
+
+  #confirm-content {
+    max-width: 95vw;
+  }
 }
