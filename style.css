@@ -9,6 +9,10 @@
   box-sizing: border-box;
 }
 
+html {
+  overscroll-behavior: none;
+}
+
 body {
   font-family: 'Segoe UI', Calibri, Arial, sans-serif;
   font-size: 12px;
@@ -19,6 +23,7 @@ body {
   width: 100vw;
   user-select: none;
   -webkit-user-select: none;
+  overscroll-behavior: none;
 }
 
 .hidden { display: none !important; }
@@ -2190,5 +2195,214 @@ body {
 
   #confirm-content {
     max-width: 95vw;
+  }
+
+  /* --- #48: Hide filler rows on mobile to save vertical space --- */
+  #filler-rows {
+    display: none !important;
+  }
+}
+
+/* ============================================
+   LANDSCAPE MODE — Issue #49
+   ============================================ */
+@media (max-width: 900px) and (orientation: landscape) {
+  /* Compact title bar in landscape */
+  #title-bar {
+    height: 22px;
+    font-size: 10px;
+    padding: 0 4px;
+  }
+
+  .title-btn {
+    width: 36px;
+    height: 22px;
+    font-size: 10px;
+  }
+
+  #title-text {
+    font-size: 10px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  /* Hide menu bar entirely in landscape — vertical space is critical */
+  #menu-bar {
+    display: none;
+  }
+
+  /* Hide formula bar */
+  #formula-bar {
+    display: none;
+  }
+
+  /* Hide toolbar */
+  #toolbar {
+    display: none;
+  }
+
+  /* Compact column headers */
+  #col-headers > * {
+    height: 18px;
+    min-height: 18px;
+  }
+
+  .col-header {
+    font-size: 10px;
+  }
+
+  /* Compact grid rows for landscape's limited vertical space */
+  .grid-row > * {
+    min-height: 32px;
+  }
+
+  .header-row > * {
+    min-height: 20px;
+  }
+
+  /* Compact cell buttons — still touchable but shorter */
+  .cell-btn {
+    min-height: 32px;
+    min-width: 40px;
+    padding: 4px 8px;
+    font-size: 11px;
+  }
+
+  .cell-btn.btn-max {
+    min-height: 32px;
+    font-size: 10px;
+  }
+
+  /* Compact row numbers */
+  .row-num {
+    font-size: 9px;
+  }
+
+  /* Cells: slightly smaller text */
+  .cell {
+    font-size: 12px;
+    padding: 1px 3px;
+  }
+
+  /* Compact separator */
+  .sep-cell {
+    height: 2px !important;
+    min-height: 2px !important;
+  }
+
+  #row-sep > * {
+    min-height: 2px !important;
+  }
+
+  /* Hide filler rows in landscape too */
+  #filler-rows {
+    display: none !important;
+  }
+
+  /* Compact revenue breakdown */
+  #revenue-breakdown {
+    padding: 2px 8px;
+    font-size: 10px;
+  }
+
+  /* Hide $/hr and $/day in landscape */
+  #stat-hr,
+  #stat-day {
+    display: none;
+  }
+
+  #revenue-breakdown .rb-sep:nth-of-type(2),
+  #revenue-breakdown .rb-sep:nth-of-type(3) {
+    display: none;
+  }
+
+  /* Compact sheet tabs */
+  #sheet-tabs {
+    height: 22px;
+  }
+
+  .sheet-tab {
+    font-size: 10px;
+    padding: 2px 10px;
+    min-height: 22px;
+  }
+
+  /* Compact status bar */
+  #status-bar {
+    height: 18px;
+    font-size: 10px;
+    padding: 0 6px;
+  }
+
+  /* Simplify status bar like portrait */
+  #status-center {
+    display: none;
+  }
+
+  #status-clicks,
+  #status-zoom,
+  #stock-sep {
+    display: none;
+  }
+
+  /* Mini-task bar compact */
+  #mini-task-bar {
+    padding: 3px 8px;
+    font-size: 11px;
+    gap: 6px;
+    max-width: 100%;
+  }
+
+  /* Toast: fit landscape */
+  #event-toast {
+    max-width: 50vw;
+    max-height: 90vh;
+  }
+
+  #toast-body {
+    max-height: 40vh;
+    overflow-y: auto;
+  }
+
+  .toast-btn {
+    min-height: 36px;
+  }
+
+  /* Modals: fit landscape viewport */
+  #help-content {
+    max-height: 90vh;
+    max-width: 70vw;
+  }
+
+  #about-content,
+  #offline-content,
+  #confirm-content {
+    max-width: 60vw;
+  }
+
+  #series-a-content {
+    max-width: 70vw;
+  }
+
+  /* Timescale banner compact */
+  #timescale-banner {
+    padding: 3px 12px;
+    font-size: 11px;
+  }
+
+  /* Valuation chart: hide in landscape too */
+  #valuation-chart-container {
+    display: none !important;
+  }
+
+  /* Touch action for landscape too */
+  *, *::before, *::after {
+    touch-action: manipulation;
+  }
+
+  /* Overscroll prevention */
+  html, body {
+    overscroll-behavior: none;
   }
 }
