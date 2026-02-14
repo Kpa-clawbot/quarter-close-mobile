@@ -1813,10 +1813,9 @@ body {
     font-size: 20px;
   }
 
-  /* Valuation chart: fit mobile */
+  /* Valuation chart: hide on mobile (covers grid, hard to drag on touch) */
   #valuation-chart-container {
-    max-width: 90vw !important;
-    left: 5vw !important;
+    display: none !important;
   }
 
   /* Mini-task bar: compact */
