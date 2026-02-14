@@ -1651,3 +1651,332 @@ body {
   font-size: 10px;
   font-style: italic;
 }
+
+/* ============================================
+   MOBILE RESPONSIVE — Issue #34 & #35
+   ============================================ */
+@media (max-width: 600px) {
+  /* --- #34: Grid columns E-H off-screen --- */
+
+  /* Hide non-essential columns G (Rev/yr) and H (empty) */
+  .cell-g, .cell-h, .col-g, .col-h {
+    display: none !important;
+  }
+
+  /* Filler rows: hide 8th and 9th child (G and H columns) */
+  .filler-row > :nth-child(8),
+  .filler-row > :nth-child(9) {
+    display: none !important;
+  }
+
+  /* Reduce grid to 7 columns */
+  #grid-container {
+    grid-template-columns: 28px minmax(60px, 1.2fr) 32px 50px minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr);
+    overflow-x: auto;
+  }
+
+  /* Hide toolbar to save vertical space (it's decorative) */
+  #toolbar {
+    display: none;
+  }
+
+  /* Hide decorative menu items (keep only File and Help) */
+  .menu-item:not(#file-menu):not([onclick="showHelp()"]) {
+    display: none;
+  }
+
+  /* Compact title bar */
+  #title-bar {
+    height: 26px;
+    padding: 0 4px;
+  }
+
+  #title-text {
+    font-size: 11px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 200px;
+  }
+
+  /* Compact menu bar */
+  #menu-bar {
+    height: 36px;
+  }
+
+  /* Compact formula bar */
+  #formula-bar {
+    height: 22px;
+    font-size: 10px;
+  }
+
+  #cell-ref {
+    width: 40px;
+    font-size: 10px;
+  }
+
+  /* Smaller row numbers */
+  .row-num {
+    font-size: 9px;
+  }
+
+  /* Allow button text to wrap on narrow screens */
+  .cell-btn {
+    white-space: normal;
+    text-align: center;
+    line-height: 1.2;
+    font-size: 10px;
+  }
+
+  /* Compact cell padding */
+  .cell {
+    padding: 2px 3px;
+    font-size: 11px;
+  }
+
+  /* Ensure source names don't overflow */
+  .cell-a {
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* Revenue breakdown: stack or scroll */
+  #revenue-breakdown {
+    font-size: 9px;
+    padding: 2px 6px;
+    gap: 4px;
+    overflow-x: auto;
+    flex-wrap: nowrap;
+  }
+
+  /* Sheet tabs: scrollable */
+  #sheet-tabs {
+    overflow-x: auto;
+    padding: 0 4px;
+  }
+
+  .sheet-tab {
+    font-size: 10px;
+    padding: 3px 10px;
+  }
+
+  /* Status bar compact */
+  #status-bar {
+    height: 22px;
+    font-size: 10px;
+    padding: 0 6px;
+  }
+
+  /* Toast: fit mobile width */
+  #event-toast {
+    width: 90vw;
+    max-width: 360px;
+  }
+
+  /* Modals: fit mobile width */
+  #help-content {
+    max-width: 95vw;
+    max-height: 85vh;
+  }
+
+  #about-content {
+    max-width: 90vw;
+    padding: 20px;
+  }
+
+  #offline-content {
+    max-width: 90vw;
+    padding: 20px;
+  }
+
+  #series-a-content {
+    max-width: 95vw;
+  }
+
+  #confirm-content {
+    max-width: 90vw;
+    padding: 20px;
+  }
+
+  /* Arc selection: single column on mobile */
+  #arc-options {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  #arc-container {
+    padding: 20px;
+    width: 95%;
+  }
+
+  #arc-title {
+    font-size: 20px;
+  }
+
+  /* Valuation chart: fit mobile */
+  #valuation-chart-container {
+    max-width: 90vw !important;
+    left: 5vw !important;
+  }
+
+  /* Mini-task bar: compact */
+  #mini-task-bar {
+    padding: 4px 8px 4px 12px;
+    font-size: 11px;
+    max-width: 100%;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  /* --- #35: Touch targets too small --- */
+
+  /* All game buttons: minimum 44px touch target */
+  .cell-btn {
+    min-height: 44px;
+    min-width: 44px;
+    padding: 8px 10px;
+    font-size: 12px;
+  }
+
+  /* Max(N) links: 44px touch target */
+  .cell-btn.btn-max {
+    min-height: 44px;
+    min-width: 36px;
+    padding: 8px 6px;
+    font-size: 11px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* Grid rows: taller to accommodate buttons */
+  .grid-row > * {
+    min-height: 48px;
+  }
+
+  /* Header row can stay compact */
+  .header-row > * {
+    min-height: 28px;
+  }
+
+  /* Separator row stays compact */
+  .sep-cell {
+    min-height: 4px !important;
+    height: 4px !important;
+  }
+
+  #row-sep > * {
+    min-height: 4px !important;
+  }
+
+  /* Filler rows stay compact */
+  .filler-row > * {
+    min-height: 24px;
+  }
+
+  /* Menu items: 44px touch targets */
+  .menu-item {
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    padding: 8px 16px;
+    font-size: 13px;
+  }
+
+  /* Dropdown menu items: 44px touch targets */
+  .menu-dropdown-item {
+    min-height: 44px;
+    padding: 10px 16px;
+    font-size: 13px;
+  }
+
+  /* Toast close button: 44px touch target */
+  #toast-close {
+    min-width: 44px;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+  }
+
+  /* Toast action buttons: 44px */
+  .toast-btn {
+    min-height: 44px;
+    padding: 10px 16px;
+    font-size: 13px;
+  }
+
+  /* Mini-task buttons: 44px */
+  .mini-task-btn {
+    min-height: 44px;
+    padding: 8px 14px;
+    font-size: 13px;
+  }
+
+  .mini-task-skip {
+    min-height: 44px;
+    min-width: 44px;
+    padding: 8px 10px;
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* Modal buttons: 44px */
+  #offline-ok,
+  #series-a-ok,
+  #about-content button,
+  #confirm-buttons button {
+    min-height: 44px;
+    padding: 10px 20px;
+    font-size: 14px;
+  }
+
+  /* Help close button */
+  .help-close {
+    min-width: 44px;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+  }
+
+  /* Tab buttons */
+  .sheet-tab {
+    min-height: 36px;
+    display: flex;
+    align-items: center;
+  }
+
+  /* Column headers stay compact */
+  #col-headers > * {
+    min-height: 22px;
+  }
+
+  /* Title bar buttons */
+  .title-btn {
+    min-width: 44px;
+    min-height: 30px;
+  }
+
+  /* Arc option cards: larger touch targets */
+  .arc-option {
+    padding: 20px 16px;
+    min-height: 80px;
+  }
+
+  /* Boss view: hide on mobile (Esc key doesn't work on touch) */
+  /* No change needed - boss view is hidden by default */
+
+  /* Toast countdown wrapper */
+  .toast-countdown-wrapper {
+    height: 44px;
+  }
+
+  .toast-countdown-label {
+    font-size: 13px;
+  }
+}
