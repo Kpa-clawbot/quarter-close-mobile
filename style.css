@@ -1740,13 +1740,30 @@ body {
     text-overflow: ellipsis;
   }
 
-  /* Revenue breakdown: stack or scroll */
+  /* Revenue breakdown: show only $/sec and $/min on mobile (#39) */
   #revenue-breakdown {
-    font-size: 9px;
-    padding: 2px 6px;
-    gap: 4px;
-    overflow-x: auto;
+    font-size: 12px;
+    padding: 4px 8px;
+    gap: 6px;
     flex-wrap: nowrap;
+    overflow: hidden;
+  }
+
+  /* Hide $/hr and $/day stats and their preceding separators on mobile */
+  #stat-hr,
+  #stat-day {
+    display: none;
+  }
+
+  /* Hide the 2nd and 3rd separators (after $/min and $/hr) */
+  #revenue-breakdown .rb-sep:nth-of-type(2),
+  #revenue-breakdown .rb-sep:nth-of-type(3) {
+    display: none;
+  }
+
+  /* Hide debug buttons on mobile */
+  #revenue-breakdown > span:last-child {
+    display: none;
   }
 
   /* Sheet tabs: scrollable */
@@ -1977,5 +1994,83 @@ body {
 
   .toast-countdown-label {
     font-size: 13px;
+  }
+
+  /* --- #40: Scale up text sizes for mobile readability --- */
+
+  /* Grid cells: bump from 11px to 14px */
+  .cell {
+    font-size: 14px;
+  }
+
+  /* Revenue numbers in grid */
+  .cell-e, .cell-f {
+    font-size: 13px;
+  }
+
+  /* Button labels: readable on mobile */
+  .cell-btn {
+    font-size: 13px;
+  }
+
+  .cell-btn.btn-max {
+    font-size: 12px;
+  }
+
+  /* Revenue breakdown bar */
+  .rb-label {
+    font-size: 12px;
+  }
+
+  .rb-val {
+    font-size: 12px;
+  }
+
+  /* Status bar */
+  #status-bar {
+    font-size: 12px;
+  }
+
+  /* Sheet tabs */
+  .sheet-tab {
+    font-size: 12px;
+  }
+
+  /* Formula bar */
+  #formula-bar {
+    font-size: 12px;
+  }
+
+  #cell-ref {
+    font-size: 11px;
+  }
+
+  /* Row numbers */
+  .row-num {
+    font-size: 10px;
+  }
+
+  /* Column headers */
+  .col-header {
+    font-size: 12px;
+  }
+
+  /* Toast messages */
+  #event-toast {
+    font-size: 14px;
+  }
+
+  /* Mini-task bar */
+  #mini-task-bar {
+    font-size: 13px;
+  }
+
+  /* Modal text */
+  #help-content {
+    font-size: 14px;
+  }
+
+  #about-content {
+    font-size: 14px;
   }
 }
